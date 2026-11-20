@@ -430,7 +430,7 @@ export default function Dashboard() {
             <input
               value={approver}
               onChange={(e) => setApprover(e.target.value)}
-              className="w-28 bg-transparent text-[11px] font-medium outline-none"
+              className="w-28 bg-transparent text-base sm:w-24 sm:text-[11px] font-medium outline-none"
               aria-label="Approver name recorded on approvals"
             />
           </label>
@@ -883,7 +883,7 @@ export default function Dashboard() {
             onChange={(e) => setChatInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && ask()}
             placeholder="कल कितने payments fail हुए और क्यों?"
-            className="flex-1 rounded-lg border border-hairline bg-paper px-4 py-2.5 text-sm outline-none transition-colors duration-150 focus:border-klear"
+            className="flex-1 rounded-lg border border-hairline bg-paper px-4 py-2.5 text-base sm:text-sm outline-none transition-colors duration-150 focus:border-klear"
             aria-label="Ask Klear a question about your ledger"
           />
           <button

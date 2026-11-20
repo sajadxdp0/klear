@@ -122,6 +122,21 @@ than guessing.
 Retraining is two commands (`npm run gen:dataset`, `python3 ml/train.py`)
 and the eval gate tells you whether the new model earned its place.
 
+## Why a web app
+
+A deliberate call, not a default. Cashfree's webhooks need a public HTTPS
+endpoint, so any native client would drag a server along anyway. The demo
+needs a URL, not an install. The merchant's job is desk-shaped: a ledger,
+a statement PDF, books that close at night. And the web is where
+Cashfree's own surfaces live, from payment links to DevStudio.
+
+The manifest in `src/app/manifest.ts` makes it installable: a merchant
+can put Klear on their home screen and run it fullscreen like an app,
+with the stamp mark as the icon. What a native companion would add later
+is push: a notification the moment a recovery link gets paid, and one-tap
+approval from the lock screen. That's the v2 roadmap line, not a
+distribution gamble.
+
 ## The buildathon
 
 Built for the Cashfree × Sarvam Buildathon 2026. Relay is the front
