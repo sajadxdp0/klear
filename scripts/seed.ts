@@ -14,6 +14,7 @@ import { getDb } from "../src/lib/db/client";
 import {
   auditLog,
   bankTxns,
+  disputes,
   orders,
   payments,
   reconMatches,
@@ -331,16 +332,21 @@ for (let i = 0; i < 12; i++) {
   failedNote.push({ orderId, reason: f.reason });
 }
 
+/* ── Disputes: the response drafts itself ────────────────────────────── */
+const disputeRows: (typeof disputes.$inferInsert)[] = [];
+
 /* ── Planted fraud cases (labeled) ───────────────────────────────────── */
 
 /* F1: velocity burst — 5 rapid attempts → BLOCK */
 {
   const customer = "Farhan Khan";
   const burstIds: string[] = [];
+  let burstOrderId = "";
   for (let i = 0; i < 5; i++) {
     const orderId = uid("order");
     const payId = uid("pay");
     const t = now - 3 * HOUR + i * 3 * MIN;
+    burstOrderId = orderId;
     orderRows.push({
       id: orderId, amount: 950000, status: "ACTIVE", customerName: customer,
       customerPhone: "+919812340098", customerEmail: "farhan@gmail.com",
@@ -369,6 +375,24 @@ for (let i = 0; i < 12; i++) {
       note: "F1: velocity burst ₹9.5K×5",
     });
   }
+
+  /* D1: an open chargeback on the burst order — the fraud story continues:
+     the flagged cluster turns into an issuer dispute, and the evidence
+     pack built on the flag becomes the response. */
+  disputeRows.push({
+    id: `dis_KLR_burst_${burstIds[4].slice(-6)}`,
+    orderId: burstOrderId,
+    paymentId: burstIds[4],
+    amount: 950000,
+    category: "chargeback",
+    note: "Issuer dispute raised: cardholder does not recognize the transaction. Response window closes in 5 days.",
+    status: "OPEN",
+    evidence: null,
+    openedAt: now - 6 * HOUR,
+    resolvedOn: null,
+    closedInFavorOf: null,
+    raw: null,
+  });
 }
 
 /* F2: brand-new customer, ₹89,000 card → REVIEW */
@@ -434,6 +458,27 @@ truth.fraud.push({
   note: "F4: loyal whale ₹75K — must NOT flag in any mode",
 });
 
+/* D2: a dispute already won with evidence — the lifecycle, finished */
+{
+  const c = cleanChain("Divya Reddy", now - 96 * HOUR, 268000, "upi");
+  disputeRows.push({
+    id: `dis_KLR_won_${c.payId.slice(-6)}`,
+    orderId: c.orderId,
+    paymentId: c.payId,
+    amount: 268000,
+    category: "product_not_received",
+    note: "Customer claimed the order never arrived. Delivery confirmation and signature matched.",
+    status: "WON",
+    evidence: JSON.stringify({
+      summary: "Delivered and signed for on the recorded date; claim contradicted courier proof.",
+    }),
+    openedAt: now - 96 * HOUR,
+    resolvedOn: now - 72 * HOUR,
+    closedInFavorOf: "MERCHANT",
+    raw: null,
+  });
+}
+
 /* ── A few PENDING payments (in flight) ──────────────────────────────── */
 for (let i = 0; i < 3; i++) {
   const orderId = uid("order");
@@ -453,7 +498,7 @@ const db = getDb();
 const wipe = (t: Parameters<typeof db.delete>[0]) => db.delete(t).run();
 wipe(orders); wipe(payments); wipe(settlements);
 wipe(bankTxns); wipe(refunds); wipe(reconMatches);
-wipe(fraudFlags); wipe(recoveryActions); wipe(klearRuns);
+wipe(fraudFlags); wipe(recoveryActions); wipe(klearRuns); wipe(disputes);
 
 db.insert(orders).values(orderRows).run();
 db.insert(payments).values(paymentRows).run();
@@ -462,6 +507,7 @@ db.insert(settlements).values(settlementRows).run();
 // (CSV + PDF) so the live demo performs the real ingest: upload → parse →
 // three-way match. The eval harness ingests the CSV before matching.
 db.insert(refunds).values(refundRows).run();
+db.insert(disputes).values(disputeRows).run();
 
 const csvLines = ["date,amount_paise,direction,utr,narration"];
 for (const b of bankRows) {
@@ -506,6 +552,7 @@ console.log(`  orders        ${orderRows.length}`);
 console.log(`  payments      ${paymentRows.length}`);
 console.log(`  settlements   ${settlementRows.length}`);
 console.log(`  refunds       ${refundRows.length}`);
+console.log(`  disputes      ${disputeRows.length}`);
 console.log(`  bank txns     ${bankRows.length} (exported as artifacts/demo-bank-statement.csv — NOT ingested)`);
 console.log(`  recon truths  ${truth.recon.length}`);
 console.log(`  fraud truths  ${truth.fraud.length}`);

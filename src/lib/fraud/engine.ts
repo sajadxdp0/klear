@@ -22,7 +22,14 @@ import { modelScore, modelArtifactStatus, type ModelResult } from "./model";
 
 export type RiskBand = "OK" | "REVIEW" | "BLOCK";
 
-export const BAND_THRESHOLDS = { REVIEW: 0.5, BLOCK: 0.75 } as const;
+/**
+ * Bands are product knobs, not constants: a real product exposes its risk
+ * appetite through configuration, and the audit trail shows what changed.
+ */
+export const BAND_THRESHOLDS = {
+  REVIEW: Number(process.env.FRAUD_REVIEW_THRESHOLD ?? 0.5),
+  BLOCK: Number(process.env.FRAUD_BLOCK_THRESHOLD ?? 0.75),
+};
 
 export interface FraudAssessment {
   paymentId: string;

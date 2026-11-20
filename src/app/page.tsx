@@ -172,6 +172,9 @@ export default function Dashboard() {
   const [evidenceById, setEvidenceById] = useState<
     Record<number, { summary: string; mode: string }>
   >({});
+  const [draftsByDispute, setDraftsByDispute] = useState<
+    Record<string, { summary: string; points: string[]; mode: string }>
+  >({});
   const fileRef = useRef<HTMLInputElement>(null);
   const stampedRef = useRef<Set<number>>(new Set());
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -329,6 +332,34 @@ export default function Dashboard() {
     }
   }
 
+  async function draftFor(disputeId: string) {
+    setBusy(`draft-${disputeId}`);
+    try {
+      const res = await fetch("/api/disputes/draft", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ disputeId }),
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        setToast(body.error ?? "draft failed");
+        return;
+      }
+      setDraftsByDispute((m) => ({
+        ...m,
+        [disputeId]: { summary: body.summary, points: body.evidencePoints, mode: body.mode },
+      }));
+      setToast(
+        body.mode === "sarvam-105b"
+          ? "Response drafted by Sarvam-105B around your recorded evidence"
+          : "Response drafted (template). Runs on Sarvam-105B with the API key"
+      );
+      await refresh();
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function ask() {
     const q = chatInput.trim();
     if (!q) return;
@@ -444,7 +475,7 @@ export default function Dashboard() {
           <Mark />
           <div>
             <h1 className="text-xl font-semibold tracking-tight">Klear</h1>
-            <div className="text-xs text-mist">every rupee, cleared · Sunrise Organics</div>
+            <div className="text-xs text-mist">every rupee, cleared · {data.meta.merchantName}</div>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-[11px]">
@@ -647,7 +678,15 @@ export default function Dashboard() {
       {/* exceptions + flags */}
       <section className="mt-8 grid gap-6 lg:grid-cols-2">
         <div>
-          <h2 className="text-sm font-medium text-mist">Exceptions that don&apos;t close</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-medium text-mist">Exceptions that don&apos;t close</h2>
+            <a
+              href="/api/export/exceptions"
+              className="text-[11px] font-medium text-mist transition-colors hover:text-klear"
+            >
+              Export CSV
+            </a>
+          </div>
           <div className="mt-3 space-y-2">
             {data.exceptions.length === 0 ? (
               <div className="rounded-xl border border-hairline bg-white p-4 text-sm text-mist">
@@ -756,6 +795,75 @@ export default function Dashboard() {
               ))
             )}
           </div>
+        </div>
+      </section>
+
+      {/* disputes */}
+      <section className="mt-8">
+        <h2 className="text-sm font-medium text-mist">
+          Disputes · the response drafts itself
+        </h2>
+        <div className="mt-3 space-y-2">
+          {data.disputes.length === 0 ? (
+            <div className="rounded-xl border border-hairline bg-white p-4 text-sm text-mist">
+              No open disputes. Chargebacks and claims land here from Cashfree webhooks.
+            </div>
+          ) : (
+            data.disputes.map((d) => {
+              const draft = draftsByDispute[d.id];
+              return (
+                <div key={d.id} className="rounded-xl border border-hairline bg-white p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Chip status={
+                      d.status === "WON" ? "EXECUTED" :
+                      d.status === "LOST" ? "FAILED" :
+                      d.status === "UNDER_REVIEW" ? "PARTIAL" : "PROPOSED"
+                    }>{d.status === "UNDER_REVIEW" ? "Under review" : d.status}</Chip>
+                    <span className="tnum text-xs text-mist">{d.orderId}</span>
+                    <span className="tnum text-sm font-medium">{formatINR(d.amount)}</span>
+                    {d.category ? (
+                      <span className="rounded-full bg-mist/10 px-2 py-0.5 text-[11px] text-mist">
+                        {d.category}
+                      </span>
+                    ) : null}
+                    <div className="ml-auto">
+                      {d.status === "OPEN" || d.status === "UNDER_REVIEW" ? (
+                        <button
+                          onClick={() => draftFor(d.id)}
+                          disabled={busy === `draft-${d.id}`}
+                          className={`${BTN_BASE} border border-klear/40 bg-klear/5 px-3 py-1.5 text-xs font-medium text-klear hover:bg-klear/10`}
+                        >
+                          <FileSearch size={16} strokeWidth={1.5} />
+                          {busy === `draft-${d.id}` ? "Drafting" : draft ? "Redraft" : "Draft response"}
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                  {d.note ? (
+                    <div className="mt-2 text-sm leading-6 text-ink/80">{d.note}</div>
+                  ) : null}
+                  {d.status === "WON" && d.closedInFavorOf ? (
+                    <div className="mt-1 text-[11px] text-klear">closed in the merchant&apos;s favor</div>
+                  ) : null}
+                  {draft ? (
+                    <div className="mt-3 rounded border border-hairline bg-paper p-3">
+                      <div className="flex items-center gap-2">
+                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${draft.mode === "sarvam-105b" ? "bg-klear/10 text-klear" : "bg-warn/10 text-warn"}`}>
+                          {draft.mode === "sarvam-105b" ? "Sarvam-105B" : "Template"}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-xs leading-5 text-ink/90">{draft.summary}</p>
+                      <ul className="mt-2 space-y-1">
+                        {draft.points.map((p, i) => (
+                          <li key={i} className="text-xs leading-5 text-ink/80">· {p}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })
+          )}
         </div>
       </section>
 
@@ -991,9 +1099,17 @@ export default function Dashboard() {
 
       {/* audit */}
       <section className="mt-8">
-        <h2 className="text-sm font-medium text-mist">
-          Audit trail · every action, who took it, when
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-medium text-mist">
+            Audit trail · every action, who took it, when
+          </h2>
+          <a
+            href="/api/export/audit"
+            className="text-[11px] font-medium text-mist transition-colors hover:text-klear"
+          >
+            Export CSV
+          </a>
+        </div>
         <div className="mt-3 overflow-hidden rounded-2xl border border-hairline bg-white">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-hairline text-[11px] text-mist">

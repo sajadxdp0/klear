@@ -1,10 +1,6 @@
 <p align="center">
-  <img src="brand/concept-1-stamp.svg" width="96" alt="Klear mark">
+  <img src="brand/klear-lockup.svg" width="360" alt="Klear, every rupee, cleared">
 </p>
-
-<h1 align="center">Klear</h1>
-
-<p align="center">Every rupee, cleared.</p>
 
 ---
 
@@ -47,6 +43,13 @@ out. Five attempts in one hour. Refund ratio 67 percent. First ever
 transaction at ₹89,000 on a card. One click pulls the case file together
 through Cashfree's verification APIs: PAN check, name match, penny
 drop. A regular's ₹75,000 order sails through untouched. We test that.
+
+**Dispute response.** When a chargeback or claim lands (Cashfree's
+DISPUTE_CREATED webhook or the dashboard), the evidence already on file
+becomes a drafted response to the issuer: a factual summary and three
+to five evidence points, written by Sarvam-105B strictly around the
+recorded facts, with a deterministic template underneath. The merchant
+reviews, edits if needed, sends it.
 
 ## Three rules
 
@@ -98,6 +101,21 @@ No API keys? Everything still works, labeled simulation. Recovery links
 open an in-app simulated checkout. The briefing falls back to a
 deterministic template. Drop real Cashfree sandbox keys and a Sarvam key
 into `.env` and the same code paths go live. The eval runs either way.
+
+Product knobs live in `.env`, not in code: `MERCHANT_NAME`,
+`FRAUD_REVIEW_THRESHOLD`, `FRAUD_BLOCK_THRESHOLD`. A real product lets
+the operator tune their risk appetite without a redeploy, and the audit
+ledger keeps showing exactly what ran.
+
+## The landscape
+
+The failed-payment niche is mature in the United States, built around
+subscription card billing: Churn Buster, Churnkey, Slicker and the
+biller-native retries; Chargeflow for dispute automation priced on
+outcomes. What they all assume away is India: one-shot UPI commerce,
+multilingual merchants, an SMB that reconciles by hand at 11pm. The
+full analysis of what Klear borrows, and what it refuses to copy, is in
+[docs/LANDSCAPE.md](docs/LANDSCAPE.md).
 
 ## Receipts
 

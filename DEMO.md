@@ -44,6 +44,15 @@ Then the payoff: run `npm run eval` in the terminal. 16/16 green, eight
 recon truths, eight fraud bands, and hold-out model metrics, AUC 0.9997,
 F1 0.981. "We run this before every demo. Accuracy is the product."
 
+## 4:30 Disputes, the response drafts itself
+
+Point at the open chargeback on the burst order. "The fraud flag we
+just saw became a real dispute." Click Draft response: a factual
+summary plus evidence points, written around the recorded facts, with
+the status moving to Under review in the ledger. "Chargeflow automates
+this for US card networks. India needs the same lane, UPI-first, and
+the evidence is already in our flag."
+
 ## 5:00 Recovery, agent proposes and human decides
 
 Pick a failed payment with a bank timeout. Read the agent's rationale

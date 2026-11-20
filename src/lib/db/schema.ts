@@ -117,6 +117,21 @@ export const auditLog = sqliteTable("audit_log", {
   createdAt: integer("created_at").notNull(),
 });
 
+export const disputes = sqliteTable("disputes", {
+  id: text("id").primaryKey(), // dispute reference from the webhook
+  orderId: text("order_id").notNull(),
+  paymentId: text("payment_id"),
+  amount: integer("amount").notNull(), // paise
+  category: text("category"), // chargeback | product_not_received | refund_abuse ...
+  note: text("note"),
+  status: text("status").notNull(), // OPEN | UNDER_REVIEW | WON | LOST | CLOSED
+  evidence: text("evidence"), // json: evidence pack + drafted response
+  openedAt: integer("opened_at").notNull(),
+  resolvedOn: integer("resolved_on"),
+  closedInFavorOf: text("closed_in_favor_of"), // MERCHANT | CUSTOMER
+  raw: text("raw"),
+});
+
 export const klearRuns = sqliteTable("klear_runs", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   kind: text("kind").notNull(), // RECON | FRAUD | EVAL

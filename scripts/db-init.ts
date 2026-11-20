@@ -107,6 +107,20 @@ const DDL = [
     payload TEXT,
     created_at INTEGER NOT NULL
   )`,
+  `CREATE TABLE IF NOT EXISTS disputes (
+    id TEXT PRIMARY KEY,
+    order_id TEXT NOT NULL,
+    payment_id TEXT,
+    amount INTEGER NOT NULL,
+    category TEXT,
+    note TEXT,
+    status TEXT NOT NULL,
+    evidence TEXT,
+    opened_at INTEGER NOT NULL,
+    resolved_on INTEGER,
+    closed_in_favor_of TEXT,
+    raw TEXT
+  )`,
   `CREATE TABLE IF NOT EXISTS klear_runs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     kind TEXT NOT NULL,
@@ -118,6 +132,7 @@ const DDL = [
   `CREATE INDEX IF NOT EXISTS idx_bank_utr ON bank_txns(utr)`,
   `CREATE INDEX IF NOT EXISTS idx_recon_leg ON recon_matches(leg, status)`,
   `CREATE INDEX IF NOT EXISTS idx_flags_order ON fraud_flags(order_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_disputes_status ON disputes(status)`,
 ];
 
 const db = getSqlite();

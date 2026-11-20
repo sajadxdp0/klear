@@ -6,6 +6,7 @@ import { desc, inArray } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import {
   auditLog,
+  disputes,
   fraudFlags,
   orders,
   payments,
@@ -53,6 +54,17 @@ export interface DashboardData {
     result: string | null;
     createdAt: number;
   }[];
+  disputes: {
+    id: string;
+    orderId: string;
+    amount: number;
+    category: string | null;
+    note: string | null;
+    status: string;
+    openedAt: number;
+    closedInFavorOf: string | null;
+    evidence: string | null;
+  }[];
   audit: {
     id: number;
     actor: string;
@@ -62,6 +74,7 @@ export interface DashboardData {
     createdAt: number;
   }[];
   meta: {
+    merchantName: string;
     cashfreeConfigured: boolean;
     sarvamConfigured: boolean;
     model: ReturnType<typeof modelArtifactStatus>;
@@ -71,7 +84,7 @@ export interface DashboardData {
 
 export async function getDashboardData(): Promise<DashboardData> {
   const db = getDb();
-  const [facts, matchRows, flagRows, actionRows, auditRows, orderRows, paymentRows, settlementRows] =
+  const [facts, matchRows, flagRows, actionRows, auditRows, orderRows, paymentRows, settlementRows, disputeRows] =
     await Promise.all([
       buildOverviewFacts(),
       db.select().from(reconMatches),
@@ -81,6 +94,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       db.select().from(orders),
       db.select().from(payments),
       db.select().from(settlements),
+      db.select().from(disputes).orderBy(desc(disputes.openedAt)),
     ]);
 
   const orderById = new Map(orderRows.map((o) => [o.id, o]));
@@ -139,6 +153,17 @@ export async function getDashboardData(): Promise<DashboardData> {
         result: a.result,
         createdAt: a.createdAt,
       })),
+    disputes: disputeRows.map((d) => ({
+      id: d.id,
+      orderId: d.orderId,
+      amount: d.amount,
+      category: d.category,
+      note: d.note,
+      status: d.status,
+      openedAt: d.openedAt,
+      closedInFavorOf: d.closedInFavorOf,
+      evidence: d.evidence,
+    })),
     audit: auditRows.map((a) => ({
       id: a.id,
       actor: a.actor,
@@ -148,6 +173,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       createdAt: a.createdAt,
     })),
     meta: {
+      merchantName: process.env.MERCHANT_NAME ?? "Sunrise Organics",
       cashfreeConfigured: cashfreeConfigured(),
       sarvamConfigured: sarvamConfigured(),
       model: modelArtifactStatus(),

@@ -14,7 +14,7 @@
     "gen:dataset": "tsx scripts/gen-dataset.ts",
     "train": "python3 ml/train.py",
     "bank:pdf": "python3 ml/gen_bank_pdf.py",
-    "demo:reset": "npm run db:seed && npm run eval",
+    "demo:reset": "npm run db:init && npm run db:seed && npm run eval",
     "agents:smoke": "tsx scripts/smoke.ts"
   },
   "dependencies": {

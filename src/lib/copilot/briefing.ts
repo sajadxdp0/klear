@@ -25,7 +25,7 @@ const BRIEFING_SCHEMA = {
   required: ["briefing"],
 };
 
-const SYSTEM = `You are Klear's briefing writer for an Indian merchant ("Sunrise Organics", a D2C grocery brand in Bengaluru).
+const SYSTEM = `You are Klear's briefing writer for an Indian merchant ("${process.env.MERCHANT_NAME ?? "Sunrise Organics"}", a D2C grocery brand in Bengaluru).
 Klear is a human-gated AI back office on Cashfree: it three-way reconciles orders↔payments↔settlements↔bank, triages failed payments into recovery actions, and flags fraud with reasons.
 
 Write the morning briefing using ONLY the FACTS JSON. Rules:
@@ -39,8 +39,9 @@ function templateBriefing(f: OverviewFacts): string {
   const m = f.money;
   const clear = formatINRCompact(m.clearedValuePaise);
   const risk = formatINRCompact(m.atRiskValuePaise);
+  const merchant = process.env.MERCHANT_NAME ?? "Sunrise Organics";
   const lines = [
-    `**Klear morning brief — Sunrise Organics**`,
+    `**Klear morning brief — ${merchant}**`,
     ``,
     `Money: ${clear} cleared of today's ${formatINRCompact(m.orderValuePaise)} collected (Klear score ${(f.klearScore * 100).toFixed(1)}%). ${risk} at risk.`,
     `Books: ${f.exceptions.mismatches} mismatches, ${f.exceptions.missing} missing links, ${f.exceptions.duplicates} duplicates.`,

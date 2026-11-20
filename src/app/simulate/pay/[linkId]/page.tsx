@@ -35,6 +35,7 @@ export default function SimulatePayPage({
     amountPaise: number;
     customerName: string | null;
     status: string;
+    merchantName?: string;
   } | null>(null);
   const [paid, setPaid] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -73,7 +74,7 @@ export default function SimulatePayPage({
             <Mark size={36} />
             <div>
               <div className="text-sm font-semibold">Klear · Recovery</div>
-              <div className="text-xs text-mist">for Sunrise Organics</div>
+              <div className="text-xs text-mist">for {info?.merchantName ?? "Sunrise Organics"}</div>
             </div>
           </div>
           <span className="rounded-full bg-warn/10 px-2.5 py-1 text-[11px] font-medium text-warn">

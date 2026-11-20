@@ -33,6 +33,7 @@ export async function GET(req: Request) {
       amountPaise: rows[0].amount,
       customerName: rows[0].customerName,
       status: rows[0].status,
+      merchantName: process.env.MERCHANT_NAME ?? "Sunrise Organics",
     });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 400 });

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 160" width="640" height="160">
+  <!-- Klear lockup: the clearance stamp, the wordmark, the promise. -->
+  <rect x="16" y="28" width="104" height="104" rx="24" fill="#101820"/>
+  <path d="M44 84 L62 102 L92 60"
+        fill="none" stroke="#0B7A5E" stroke-width="13"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="96" cy="56" r="7" fill="#3ED598"/>
+
+  <text x="152" y="92"
+        font-family="Helvetica, Arial, sans-serif"
+        font-size="58" font-weight="600" letter-spacing="-1.5" fill="#101820">Klear</text>
+
+  <text x="154" y="122"
+        font-family="Helvetica, Arial, sans-serif"
+        font-size="19" fill="#5B6B7A">every rupee, cleared.</text>
+</svg>

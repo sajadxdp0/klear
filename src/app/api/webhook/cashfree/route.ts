@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { verifyWebhookSignature } from "@/lib/cashfree/client";
 import { getDb } from "@/lib/db/client";
-import { auditLog, orders, payments, refunds, settlements } from "@/lib/db/schema";
+import { auditLog, disputes, orders, payments, refunds, settlements } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
 export const runtime = "nodejs";
@@ -194,10 +194,49 @@ export async function POST(req: Request) {
       }
 
       case "DISPUTE_CREATED":
-      case "DISPUTE_UPDATED":
-      case "DISPUTE_CLOSED":
-        note = `${event.type} (stored for the dispute engine)`;
+      case "DISPUTE_UPDATED": {
+        const d = (data.dispute ?? data.dispute_details ?? {}) as Record<string, unknown>;
+        const disputeId = asString(d.dispute_id) ?? asString(d.id) ?? `dis_${now}`;
+        const status = String(d.dispute_status ?? d.status ?? "OPEN").toUpperCase();
+        db.insert(disputes)
+          .values({
+            id: disputeId,
+            orderId: asString(d.order_id) ?? "",
+            paymentId: asString(d.cf_payment_id),
+            amount: rupeesToPaise(d.dispute_amount ?? d.amount),
+            category: asString(d.dispute_category ?? d.category),
+            note: asString(d.dispute_note ?? d.note),
+            status: ["OPEN", "UNDER_REVIEW", "WON", "LOST", "CLOSED"].includes(status)
+              ? status
+              : "OPEN",
+            evidence: null,
+            openedAt: now,
+            resolvedOn: null,
+            closedInFavorOf: null,
+            raw,
+          })
+          .onConflictDoNothing()
+          .run();
+        note = `${event.type} id=${disputeId}`;
         break;
+      }
+      case "DISPUTE_CLOSED": {
+        const d = (data.dispute ?? data.dispute_details ?? {}) as Record<string, unknown>;
+        const disputeId = asString(d.dispute_id) ?? asString(d.id) ?? "";
+        if (disputeId) {
+          const favor = asString(d.closed_in_favor_of);
+          db.update(disputes)
+            .set({
+              status: favor === "MERCHANT" ? "WON" : favor === "CUSTOMER" ? "LOST" : "CLOSED",
+              resolvedOn: now,
+              closedInFavorOf: favor,
+            })
+            .where(eq(disputes.id, disputeId))
+            .run();
+        }
+        note = `DISPUTE_CLOSED id=${disputeId} favor=${asString(d.closed_in_favor_of) ?? "n/a"}`;
+        break;
+      }
 
       default:
         // documented posture: no-op default handler, never fail on unknown types
