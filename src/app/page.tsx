@@ -88,6 +88,12 @@ function useCountUp(target: number, duration = 600) {
   return value;
 }
 
+/** A money figure that counts to its new value instead of jumping. */
+function MoneyTween({ paise, className }: { paise: number; className?: string }) {
+  const v = useCountUp(paise, 700);
+  return <span className={`tnum ${className ?? ""}`}>{formatINRCompact(v)}</span>;
+}
+
 const BTN_BASE =
   "inline-flex items-center gap-2 rounded-lg font-medium transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-klear/40 disabled:pointer-events-none disabled:opacity-50";
 
@@ -191,6 +197,20 @@ export default function Dashboard() {
     return () => clearTimeout(t);
   }, [toast]);
 
+  // keyboard path to the primary action (never animated, per the motion rules)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA")) return;
+      if ((e.key === "r" || e.key === "R") && !e.metaKey && !e.ctrlKey) {
+        runEngines();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function runEngines() {
     setBusy("engines");
     try {
@@ -199,7 +219,7 @@ export default function Dashboard() {
         const body = await res.json();
         setData(body.data);
         setToast(
-          `Engines run — score ${(body.engines.recon.klearScore * 100).toFixed(1)}%, ${body.engines.fraud.review + body.engines.fraud.block} flags, ${body.engines.triage.proposals} new proposals`
+          `Engines run. Score ${(body.engines.recon.klearScore * 100).toFixed(1)}%, ${body.engines.fraud.review + body.engines.fraud.block} flags, ${body.engines.triage.proposals} new proposals`
         );
       }
     } finally {
@@ -219,7 +239,7 @@ export default function Dashboard() {
         return;
       }
       setToast(
-        `Statement parsed (${body.mode === "sarvam-docai" ? "Sarvam Vision" : "CSV parser"}) — ${body.inserted} new bank txns, score now ${(body.recon.klearScore * 100).toFixed(1)}%`
+        `Statement parsed (${body.mode === "sarvam-docai" ? "Sarvam Vision" : "CSV parser"}). ${body.inserted} new bank txns, score now ${(body.recon.klearScore * 100).toFixed(1)}%`
       );
       await refresh();
     } finally {
@@ -244,6 +264,26 @@ export default function Dashboard() {
       setToast(label);
       await refresh();
       return body;
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function resolveException(matchId: number) {
+    setBusy(`resolve-${matchId}`);
+    try {
+      const res = await fetch("/api/recon/resolve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ matchId, approver }),
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        setToast(body.error ?? "could not resolve");
+        return;
+      }
+      setToast("Exception resolved and recorded in the ledger");
+      await refresh();
     } finally {
       setBusy(null);
     }
@@ -281,8 +321,8 @@ export default function Dashboard() {
       }));
       setToast(
         body.mode === "live"
-          ? "Evidence pack built via Cashfree SecureID — recorded in the audit ledger"
-          : "Evidence pack built (simulation) — runs live with SecureID keys"
+          ? "Evidence pack built via Cashfree SecureID, recorded in the audit ledger"
+          : "Evidence pack built (simulation). Runs live with SecureID keys"
       );
     } finally {
       setBusy(null);
@@ -397,7 +437,7 @@ export default function Dashboard() {
   const scorePct = (animatedScore * 100).toFixed(1);
 
   return (
-    <main className="mx-auto max-w-6xl px-6 pb-20 pt-8">
+    <main className="mx-auto max-w-[1440px] px-8 pb-20 pt-6">
       {/* header */}
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -446,6 +486,9 @@ export default function Dashboard() {
         >
           <RefreshCw size={16} strokeWidth={1.5} />
           {busy === "engines" ? "Running" : "Run engines"}
+          <kbd className="rounded border border-white/20 px-1 font-sans text-[10px] font-medium leading-4 text-white/60">
+            R
+          </kbd>
         </button>
         <button
           onClick={fetchBriefing}
@@ -484,9 +527,24 @@ export default function Dashboard() {
         </div>
       ) : null}
 
-      {/* hero: the one bright element — the score */}
+      {/* hero: the one bright element, the score */}
       <section className="mt-6 grid gap-4 md:grid-cols-[280px_1fr]">
-        <div className="rounded-2xl bg-ink p-6 text-white">
+        <div className="relative overflow-hidden rounded-2xl bg-ink p-6 text-white">
+          <svg
+            viewBox="0 0 512 512"
+            className="pointer-events-none absolute -bottom-12 -right-10 h-44 w-44 opacity-[0.08]"
+            aria-hidden
+          >
+            <path
+              d="M128 268 L222 362 L384 158"
+              fill="none"
+              stroke="#3ED598"
+              strokeWidth="58"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <div className="relative">
           <div className="text-xs text-white/60">Klear score</div>
           <div className="tnum mt-2 text-5xl font-semibold tracking-[-0.02em]">
             {scorePct}
@@ -504,6 +562,7 @@ export default function Dashboard() {
               }}
             />
           </div>
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[
@@ -514,16 +573,16 @@ export default function Dashboard() {
           ].map((s) => (
             <div key={s.label} className="rounded-2xl border border-hairline bg-white p-5">
               <div className="text-[11px] text-mist">{s.label}</div>
-              <div className={`tnum mt-2 text-2xl font-semibold ${s.tone}`}>
-                {formatINRCompact(s.value)}
+              <div className={`mt-2 text-2xl font-semibold ${s.tone}`}>
+                <MoneyTween paise={s.value} />
               </div>
             </div>
           ))}
           <div className="col-span-2 rounded-2xl border border-hairline bg-white p-5 sm:col-span-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="text-[11px] text-mist">Recoverable · failed payments in queue</div>
-              <div className="tnum text-2xl font-semibold text-warn">
-                {formatINRCompact(f.recovery.recoverablePaise)}
+              <div className="text-2xl font-semibold text-warn">
+                <MoneyTween paise={f.recovery.recoverablePaise} />
               </div>
             </div>
           </div>
@@ -596,13 +655,35 @@ export default function Dashboard() {
               </div>
             ) : (
               data.exceptions.map((e) => (
-                <div key={e.id} className="rounded-xl border border-hairline bg-white p-4">
+                <div
+                  key={e.id}
+                  className={`rounded-xl border border-hairline bg-white p-4 ${
+                    e.resolved ? "opacity-60" : ""
+                  }`}
+                >
                   <div className="flex flex-wrap items-center gap-2">
-                    <Chip status={e.status} />
+                    {e.resolved ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-mist/10 px-2 py-0.5 text-[11px] font-medium text-mist">
+                        <Check size={12} strokeWidth={1.5} />
+                        Resolved
+                      </span>
+                    ) : (
+                      <Chip status={e.status} />
+                    )}
                     <span className="text-[11px] text-mist">{LEG_LABEL[e.leg] ?? e.leg}</span>
                     <span className="tnum ml-auto text-[11px] font-medium text-mist">
                       {e.rule}
                     </span>
+                    {!e.resolved ? (
+                      <button
+                        onClick={() => resolveException(e.id)}
+                        disabled={busy === `resolve-${e.id}`}
+                        className={`${BTN_BASE} px-2.5 py-1 text-[11px] text-mist hover:text-klear`}
+                      >
+                        <Check size={14} strokeWidth={1.5} />
+                        Mark resolved
+                      </button>
+                    ) : null}
                   </div>
                   <div className="mt-2 text-sm leading-6">{e.detail}</div>
                   {e.amountDelta !== 0 ? (
@@ -632,7 +713,7 @@ export default function Dashboard() {
                 <div key={fl.id} className="rounded-xl border border-hairline bg-white p-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <Chip status={fl.band} />
-                    <span className="text-sm font-medium">{fl.customer ?? "—"}</span>
+                    <span className="text-sm font-medium">{fl.customer ?? "Unknown customer"}</span>
                     <span className="tnum text-sm">{fl.amount ? formatINR(fl.amount) : ""}</span>
                     <span className="tnum ml-auto text-[11px] font-medium text-mist">
                       score {fl.score.toFixed(2)}
@@ -667,7 +748,7 @@ export default function Dashboard() {
                     ) : null}
                   </div>
                   {evidenceById[fl.id] ? (
-                    <div className="mt-2 rounded-lg border border-hairline bg-paper p-3 text-xs leading-5 text-ink/80">
+                    <div className="mt-2 rounded border border-hairline bg-paper p-3 text-xs leading-5 text-ink/80">
                       {evidenceById[fl.id].summary}
                     </div>
                   ) : null}
@@ -709,7 +790,7 @@ export default function Dashboard() {
                   <div className="flex flex-wrap items-center gap-2">
                     {recovered ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-klear/10 px-2 py-0.5 text-[11px] font-medium text-klear">
-                        <Check size={12} strokeWidth={2} />
+                        <Check size={12} strokeWidth={1.5} />
                         Recovered
                       </span>
                     ) : (
@@ -730,7 +811,7 @@ export default function Dashboard() {
                               act(
                                 "/api/recovery/approve",
                                 { actionId: a.id, approver },
-                                `Approved by ${approver} — recorded in the ledger`
+                                `Approved by ${approver}, recorded in the ledger`
                               )
                             }
                             disabled={busy === `action-${a.id}`}
@@ -740,7 +821,7 @@ export default function Dashboard() {
                             Approve
                           </button>
                           <button
-                            onClick={async () => {
+                              onClick={async () => {
                               await act(
                                 "/api/recovery/approve",
                                 { actionId: a.id, approver },
@@ -749,7 +830,7 @@ export default function Dashboard() {
                               await act(
                                 "/api/recovery/execute",
                                 { actionId: a.id },
-                                `Executed — payment link issued${result?.simulated ? " (simulation)" : ""}`
+                                `Executed. Payment link issued${result?.simulated ? " (simulation)" : ""}`
                               );
                             }}
                             disabled={busy === `action-${a.id}`}
@@ -762,7 +843,7 @@ export default function Dashboard() {
                               act(
                                 "/api/recovery/reject",
                                 { actionId: a.id, approver },
-                                "Rejected — logged so the agent learns"
+                                "Rejected and logged, so the agent learns"
                               )
                             }
                             disabled={busy === `action-${a.id}`}
@@ -779,7 +860,7 @@ export default function Dashboard() {
                             act(
                               "/api/recovery/execute",
                               { actionId: a.id },
-                              `Executed — payment link issued${result?.simulated ? " (simulation)" : ""}`
+                              `Executed. Payment link issued${result?.simulated ? " (simulation)" : ""}`
                             )
                           }
                           disabled={busy === `action-${a.id}`}
@@ -872,7 +953,13 @@ export default function Dashboard() {
             title={recording ? "Stop recording" : "Record a voice question"}
           >
             {recording ? (
-              <Square size={16} strokeWidth={1.5} />
+              <>
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-block opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-block" />
+                </span>
+                <Square size={16} strokeWidth={1.5} />
+              </>
             ) : (
               <Mic size={16} strokeWidth={1.5} />
             )}
@@ -889,7 +976,7 @@ export default function Dashboard() {
           <button
             onClick={ask}
             disabled={busy === "copilot" || !chatInput.trim()}
-            className={`${BTN_BASE} bg-ink px-5 py-2.5 text-sm text-white hover:bg-klear`}
+            className={`${BTN_BASE} bg-ink px-4 py-2.5 text-sm text-white hover:bg-klear`}
           >
             {busy === "copilot" ? "Thinking" : "Ask"}
           </button>
@@ -898,6 +985,7 @@ export default function Dashboard() {
           {recording
             ? "Recording. Speak in Hindi, Hinglish or English, then tap stop."
             : "Type a question, or tap the mic and just ask."}
+          {data.meta.sarvamConfigured ? "" : " · the copilot answers live once SARVAM_API_KEY is in .env"}
         </div>
       </section>
 
@@ -918,7 +1006,10 @@ export default function Dashboard() {
             </thead>
             <tbody>
               {data.audit.map((a) => (
-                <tr key={a.id} className="border-b border-hairline last:border-0">
+                <tr
+                  key={a.id}
+                  className="border-b border-hairline transition-colors last:border-0 hover:bg-paper"
+                >
                   <td className="px-4 py-2.5 font-medium">{a.actor}</td>
                   <td className="px-4 py-2.5">{a.action}</td>
                   <td className="px-4 py-2.5 text-mist">{a.entityId ?? a.entity}</td>
@@ -936,7 +1027,7 @@ export default function Dashboard() {
       </section>
 
       <footer className="mt-10 text-center text-[11px] text-mist">
-        Klear · human-gated back office on Cashfree × Sarvam — money paths are deterministic, the
+        Klear · human-gated back office on Cashfree × Sarvam · money paths are deterministic, the
         copilot reasons, approvals are yours
       </footer>
     </main>
