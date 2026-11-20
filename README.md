@@ -1,106 +1,126 @@
-# Klear
+<p align="center">
+  <img src="brand/concept-1-stamp.svg" width="96" alt="Klear mark" />
+</p>
 
-**Every rupee, cleared.**
+<h1 align="center">Klear</h1>
 
-A human-gated AI back office for merchants on Cashfree: three-way payment
-reconciliation, explainable fraud defense, and failed-payment recovery —
-built for the Cashfree × Sarvam Buildathon 2026.
+<p align="center"><em>Every rupee, cleared.</em></p>
 
-Klear's core discipline: **deterministic money paths, LLM surfaces.** The
-matcher and risk scorer are plain, auditable code with exact-paise
-comparisons. Sarvam-105B narrates, reasons, and answers questions — it
-never does arithmetic on your books. Nothing moves money without a human
-approval recorded in an append-only ledger.
+---
+
+The merchant problem isn't collecting money anymore. It's knowing where the money went.
+
+Yesterday a D2C merchant collected ₹2.15 lakh through Cashfree. Today she has
+three questions and no good answers:
+
+- The order says PAID, the settlement says paid out, her bank statement says
+  *something*. Three lists, three formats, one spreadsheet at 11pm.
+- Fifteen payments failed. Each failure has a reason — bank timeout, no
+  balance, a dead UPI ID. Some are one nudge away from recovering. Nobody
+  knows which.
+- A brand-new customer just paid ₹89,000 by card. Hold the shipment? Ship it?
+  Her current fraud tooling gives her a feeling, not an answer.
+
+Seven out of ten small businesses handle this by hand. Klear does the three
+jobs, and then does something unusual: **it waits for permission.**
+
+## The three jobs
+
+**It reconciles.** Every rupee is matched three ways — order ↔ payment ↔
+settlement ↔ bank statement — in exact paise. No tolerance on money, ever.
+When something doesn't add up, Klear names the rupee, shows where the chain
+broke, and explains which rule fired. A ₹1-off payment gets caught. A
+settlement that never hit the bank gets caught. A duplicate credit in the
+statement gets caught.
+
+**It recovers.** Every failed payment gets read and triaged: bank timeouts
+propose a retry, declined cards propose a UPI link, risk holds get paused
+for review. Then the important part — a human clicks approve, Cashfree sends
+the link, the customer pays, and the books update live on the screen.
+
+**It defends.** Every payment gets a fraud score with reasons in plain
+language — "5 attempts within an hour", "refund ratio 67%", "first-ever
+transaction, ₹89,000, card". One click builds the case file through
+Cashfree's verification APIs: PAN check, fuzzy name-match, bank penny drop.
+Evidence, not vibes. And a loyal customer's ₹75,000 order sails through —
+we test that we don't false-flag her.
+
+## Three rules we don't break
+
+1. **The AI never does the math.** Matching and scoring run in plain,
+   deterministic code on integers. Sarvam-105B writes the words *around*
+   numbers that TypeScript computed — it never computes anything itself.
+2. **The AI never moves money.** Every rupee needs a recorded human "yes",
+   in an append-only audit ledger. The copilot can approve with your name;
+   it cannot act alone.
+3. **We don't claim accuracy, we measure it.** The seed plants sixteen
+   traps — eight reconciliation failures, eight fraud cases including one
+   customer we're *not allowed* to false-flag. `npm run eval` must print
+   16/16 or we don't demo. It's green right now.
 
 ```
-Cashfree orders/payments/settlements ──┐
-Bank statement (CSV or Sarvam Vision) ─┴─▶ INGEST ─▶ SQLite ledger
+Cashfree orders / payments / settlements ─┐
+Bank statement (CSV or Sarvam Vision PDF) ─┴─▶ ledger ─▶ three-way match
                                               │
         ┌─────────────────┬─────────────────┤
         ▼                 ▼                 ▼
-  RECON ENGINE      FRAUD ENGINE      RECOVERY TRIAGE
-  order↔payment↔    rules + LightGBM  failure reason →
-  settlement↔bank   →ONNX, reasons,   proposed action,
-  exact-paise       evidence packs    human-gated
-        │                 │                 │
+   exceptions         fraud flags      recovery plans
+   (exact paise)    (rules + ONNX,     (reason → action,
+                     with reasons)      human-gated)
         └────────┬────────┴────────────────┘
                  ▼
-     APPROVALS + APPEND-ONLY AUDIT LEDGER
+     approvals → append-only audit ledger
                  ▼
-     ASK KLEAR (Sarvam-105B copilot over your own ledger)
+   Ask Klear: Sarvam-105B, Hinglish, over your own ledger
 ```
 
-## Accuracy is the product
+The front door is conversational on purpose: ask
+*"कल कितने payments fail हुए और क्यों?"* and the copilot answers from the
+merchant's own numbers, in the merchant's own language. Drop the bank
+statement PDF in and Sarvam Vision reads it — in advanced mode, which
+cross-checks that line items add up to the total.
 
-`npm run eval` runs the accuracy harness against planted ground truth
-(`artifacts/seed-truth.json`) and exits non-zero on any failure:
-
-- **Recon** — 8 planted exceptions (missing payments, ₹1-off amounts,
-  broken fee arithmetic, short bank credits, duplicate settlements/UTRs,
-  orphan credits) must each be recovered with the exact expected status.
-- **Fraud** — labeled cases incl. a velocity burst cluster (BLOCK), a
-  new-customer ₹89K card (BLOCK with the model, REVIEW floor without),
-  a refund abuser (REVIEW — deliberately never model-BLOCKed: that's the
-  human-judgment lane), and a loyal ₹75K whale (must NOT flag — the
-  false-positive control).
-
-Current held-out model metrics (`artifacts/metrics.json`):
-AUC-ROC 0.9997 · precision 0.979 · recall 0.983 · F1 0.981.
-
-## Stack
-
-| Layer | Choice |
-|---|---|
-| Payments rails | Cashfree PG REST (`POST /pg/links`, orders, HMAC-verified webhooks, `x-api-version: 2026-01-01`) |
-| Reasoning / copilot | Sarvam-105B (structured outputs + tool calling, official `sarvamai` SDK) |
-| Document AI | Sarvam Vision extract — bank statement PDF → transactions JSON |
-| TTS (stretch) | Bulbul v4 Flash briefing audio |
-| Fraud model | LightGBM → ONNX (`onnxruntime-node`), logistic-JSON fallback, rules floor |
-| App | Next.js 15, TypeScript, Tailwind v4, Drizzle + SQLite (WAL) |
-
-## Setup
+## Try it
 
 ```bash
 npm install
-cp .env.example .env   # add CASHFREE_* and SARVAM_API_KEY when you have them
 npm run db:init
-npm run demo:reset     # seed + ingest + accuracy harness (16/16 green)
+npm run demo:reset     # seeds the merchant day + runs the eval (16/16)
 npm run dev            # http://localhost:3000
 ```
 
-Without API keys everything still works in clearly-labeled SIMULATION
-mode: recovery links point at an in-app simulated checkout, the briefing
-falls back to a deterministic template, PDF statements ask for the
-Sarvam key.
+No API keys? Everything still works, clearly labeled **simulation** —
+recovery links open an in-app simulated checkout, the briefing falls back
+to a deterministic template, PDF parsing asks for the Sarvam key. Add real
+Cashfree sandbox keys and a Sarvam key to `.env` and the same code paths go
+live. The eval runs either way.
 
-## Demo day run-book
+## The receipts
 
-```bash
-npm run demo:reset     # fresh books, proven accurate, ~10s
-npm run dev
-```
+- **Recon:** 8 planted failures (missing payment, ₹1-off amount, broken fee
+  arithmetic, short bank credit, duplicate settlement, duplicate UTR,
+  missing bank credit, orphan credit) — all 8 recovered exactly, every run.
+- **Fraud model:** LightGBM served through ONNX inside Node, trained on
+  ~48,500 synthetic rows built with the *same* feature code that runs at
+  inference. Held-out golden set: **AUC 0.9997, precision 0.979, recall
+  0.983, F1 0.981**. A logistic-JSON fallback and a rules floor sit under
+  it, so the demo never dies because a binary failed to load.
+- **Integrations follow the real contracts:** webhook event names are
+  `PAYMENT_SUCCESS_WEBHOOK` and friends, signatures are HMAC-SHA256 over
+  the raw body, settlement rows are the v6 nested recon schema, UTRs are
+  coerced from JSON numbers, and SecureID runs on its own keys — all
+  details we verified against Cashfree's own docs and open-source agent
+  toolkit rather than guessing.
 
-The 13-minute demo script lives in [DEMO.md](./DEMO.md).
+Retraining is two commands (`npm run gen:dataset`, `python3 ml/train.py`)
+and the eval gate tells you if the new model earned its place.
 
-## Where things live
+## Built for the Cashfree × Sarvam Buildathon 2026
 
-```
-src/lib/recon/      pure matchers (matcher.ts), DB run, bank ingest
-src/lib/fraud/      features, rules, model wrapper, sweep engine
-src/lib/recovery/   triage, approvals, execution (human-gated)
-src/lib/copilot/    deterministic facts, briefing, Ask Klear agent loop
-src/lib/cashfree/   payment links, webhook verification, order fetch
-src/lib/sarvam/     chat / document AI / TTS client
-scripts/            db-init, seed (ground truth), dataset generator
-ml/                 trainer (LightGBM→ONNX), bank statement PDF generator
-eval/               accuracy harness
-artifacts/          model.onnx, weights.json, metrics.json, seed-truth.json
-```
+Relay is the front line — carts, COD calls, payment nudges. Klear is the
+back office that Relay deserves: the matching brain, the risk brain, the
+audit trail. One agent you talk to in Hindi, three jobs done with provable
+accuracy, and nothing that moves money without a human yes.
 
-## Model retraining
-
-```bash
-npm run gen:dataset              # ~48.5k rows via the SAME runtime feature builder
-python3 ml/train.py              # LightGBM→ONNX + logistic fallback + metrics
-npm run eval                     # verify 16/16 still green with the new model
-```
+MIT licensed. The fraud model, the weights, the demo data and the eval all
+ship in the repo — clone it, run it, check us.
