@@ -6,8 +6,11 @@ import {
   Check,
   ExternalLink,
   FileSearch,
+  Mic,
   RefreshCw,
+  Square,
   Upload,
+  Volume2,
   X,
 } from "lucide-react";
 import type { DashboardData } from "@/lib/dashboard/data";
@@ -97,7 +100,53 @@ function stripMd(s: string) {
 interface ChatEntry {
   role: "user" | "klear";
   text: string;
+  heard?: boolean; // true when the text came in as speech
   trace?: { name: string }[];
+}
+
+/** Encodes any recorded blob to 16 kHz mono PCM16 WAV, the format Saaras handles best. */
+async function blobToWav16k(blob: Blob): Promise<Blob> {
+  const AudioCtor =
+    window.AudioContext ??
+    (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+  const decodeCtx = new AudioCtor();
+  const decoded = await decodeCtx.decodeAudioData(await blob.arrayBuffer());
+  void decodeCtx.close();
+
+  const length = Math.max(1, Math.ceil(decoded.duration * 16000));
+  const offline = new OfflineAudioContext(1, length, 16000);
+  const source = offline.createBufferSource();
+  source.buffer = decoded;
+  source.connect(offline.destination);
+  source.start();
+  const rendered = await offline.startRendering();
+  const data = rendered.getChannelData(0);
+
+  const buffer = new ArrayBuffer(44 + data.length * 2);
+  const view = new DataView(buffer);
+  const writeStr = (offset: number, s: string) => {
+    for (let i = 0; i < s.length; i++) view.setUint8(offset + i, s.charCodeAt(i));
+  };
+  writeStr(0, "RIFF");
+  view.setUint32(4, 36 + data.length * 2, true);
+  writeStr(8, "WAVE");
+  writeStr(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, 16000, true);
+  view.setUint32(28, 32000, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeStr(36, "data");
+  view.setUint32(40, data.length * 2, true);
+  let offset = 44;
+  for (let i = 0; i < data.length; i++) {
+    const s = Math.max(-1, Math.min(1, data[i]));
+    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+    offset += 2;
+  }
+  return new Blob([buffer], { type: "audio/wav" });
 }
 
 const LEG_LABEL: Record<string, string> = {
@@ -119,6 +168,10 @@ export default function Dashboard() {
   >({});
   const fileRef = useRef<HTMLInputElement>(null);
   const stampedRef = useRef<Set<number>>(new Set());
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const [recording, setRecording] = useState(false);
+  const [playingBriefing, setPlayingBriefing] = useState(false);
   // hook order must be stable across renders — call before the loading return
   const score = data?.facts.klearScore ?? 0;
   const animatedScore = useCountUp(score);
@@ -241,12 +294,16 @@ export default function Dashboard() {
     if (!q) return;
     setChatInput("");
     setChat((c) => [...c, { role: "user", text: q }]);
+    await runCopilot(q, false);
+  }
+
+  async function runCopilot(question: string, heard: boolean) {
     setBusy("copilot");
     try {
       const res = await fetch("/api/copilot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: q }),
+        body: JSON.stringify({ question }),
       });
       const body = await res.json();
       if (!res.ok) {
@@ -260,6 +317,68 @@ export default function Dashboard() {
       }
     } finally {
       setBusy(null);
+    }
+  }
+
+  async function toggleRecording() {
+    if (recording) {
+      recorderRef.current?.stop();
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      chunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        setRecording(false);
+        const raw = new Blob(chunksRef.current, { type: recorder.mimeType });
+        if (raw.size === 0) return;
+        setBusy("voice");
+        try {
+          const wav = await blobToWav16k(raw);
+          const form = new FormData();
+          form.append("file", wav, "question.wav");
+          const res = await fetch("/api/copilot/voice", { method: "POST", body: form });
+          const body = await res.json();
+          if (!res.ok) {
+            setToast(body.error ?? "transcription failed");
+            return;
+          }
+          setChat((c) => [...c, { role: "user", text: body.transcript, heard: true }]);
+          await runCopilot(body.transcript, true);
+        } finally {
+          setBusy(null);
+        }
+      };
+      recorderRef.current = recorder;
+      recorder.start();
+      setRecording(true);
+    } catch {
+      setToast("microphone unavailable in this browser, type your question instead");
+    }
+  }
+
+  async function playBriefingAudio() {
+    setPlayingBriefing(true);
+    try {
+      const res = await fetch("/api/briefing/audio");
+      const body = await res.json();
+      if (!res.ok || !body.audioBase64) {
+        setToast(body.error ?? "briefing audio needs SARVAM_API_KEY");
+        return;
+      }
+      const audio = new Audio(`data:${body.format ?? "audio/wav"};base64,${body.audioBase64}`);
+      audio.onended = () => setPlayingBriefing(false);
+      audio.onerror = () => setPlayingBriefing(false);
+      await audio.play();
+      setToast("Bulbul briefing, Hindi");
+    } catch (err) {
+      setPlayingBriefing(false);
+      setToast(String((err as Error).message ?? "playback failed"));
     }
   }
 
@@ -444,11 +563,21 @@ export default function Dashboard() {
       {/* briefing */}
       {briefing ? (
         <section className="mt-6 rounded-2xl border border-klear/25 bg-klear/5 p-6">
-          <div className="text-[11px] text-klear">
-            Morning briefing ·{" "}
-            {briefing.mode === "sarvam-105b"
-              ? "Sarvam-105B around Klear's own numbers"
-              : "deterministic template (no API key)"}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="text-[11px] text-klear">
+              Morning briefing ·{" "}
+              {briefing.mode === "sarvam-105b"
+                ? "Sarvam-105B around Klear's own numbers"
+                : "deterministic template (no API key)"}
+            </div>
+            <button
+              onClick={playBriefingAudio}
+              disabled={playingBriefing}
+              className={`${BTN_BASE} border border-klear/40 bg-klear/5 px-3 py-1.5 text-xs font-medium text-klear hover:bg-klear/10`}
+            >
+              <Volume2 size={16} strokeWidth={1.5} />
+              {playingBriefing ? "Playing" : "Listen in Hindi"}
+            </button>
           </div>
           <pre className="mt-3 whitespace-pre-wrap font-sans text-sm leading-6">
             {stripMd(briefing.text)}
@@ -708,6 +837,12 @@ export default function Dashboard() {
                     : `mr-16 border border-hairline bg-paper${isLastKlear ? " reply-enter" : ""}`
                 }`}
               >
+                {m.heard ? (
+                  <div className="mb-1 flex items-center gap-1 text-[11px] text-white/60">
+                    <Mic size={11} strokeWidth={1.5} />
+                    heard
+                  </div>
+                ) : null}
                 <div className="whitespace-pre-wrap">{stripMd(m.text)}</div>
                 {m.trace && m.trace.length > 0 ? (
                   <div className="mt-2 flex flex-wrap gap-1">
@@ -726,6 +861,23 @@ export default function Dashboard() {
           })}
         </div>
         <div className="mt-4 flex gap-2">
+          <button
+            onClick={toggleRecording}
+            disabled={busy === "voice"}
+            className={`${BTN_BASE} border px-3 py-2.5 ${
+              recording
+                ? "border-block/40 bg-block/5 text-block"
+                : "border-hairline bg-white hover:border-klear"
+            }`}
+            title={recording ? "Stop recording" : "Record a voice question"}
+          >
+            {recording ? (
+              <Square size={16} strokeWidth={1.5} />
+            ) : (
+              <Mic size={16} strokeWidth={1.5} />
+            )}
+            {recording ? "Stop" : busy === "voice" ? "Hearing" : ""}
+          </button>
           <input
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
@@ -741,6 +893,11 @@ export default function Dashboard() {
           >
             {busy === "copilot" ? "Thinking" : "Ask"}
           </button>
+        </div>
+        <div className="mt-2 text-[11px] text-mist">
+          {recording
+            ? "Recording. Speak in Hindi, Hinglish or English, then tap stop."
+            : "Type a question, or tap the mic and just ask."}
         </div>
       </section>
 

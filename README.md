@@ -77,11 +77,13 @@ Bank statement (CSV or Sarvam Vision PDF) ─┴─▶ ledger ─▶ three-way m
    Ask Klear: Sarvam-105B, Hinglish, over your own ledger
 ```
 
-You can also just talk to it. Ask
-`"कल कितने payments fail हुए और क्यों?"` and you get the real numbers from
-your own ledger back, in your own language. Drop the bank statement PDF
-in and Sarvam Vision reads it, in the advanced mode that cross-checks
-line items against the total.
+You can also just talk to it. Type `"कल कितने payments fail हुए और क्यों?"` or tap
+the mic and say it out loud: Saaras v4 hears the question (keyterm-biased
+for payments vocabulary, Hinglish included) and the copilot answers with
+the real numbers from your own ledger. The morning briefing can be read
+out loud in Hindi through Bulbul. Drop the bank statement PDF in and
+Sarvam Vision reads it, in the advanced mode that cross-checks line
+items against the total.
 
 ## Try it
 

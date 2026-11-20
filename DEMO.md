@@ -68,11 +68,16 @@ path proves the same matcher. Recon re-runs instantly.
 ## 9:00 Ask Klear (Sarvam-105B)
 
 Click Morning briefing. The narrative is written by Sarvam-105B strictly
-around Klear's own computed numbers.
+around Klear's own computed numbers. Then click Listen in Hindi and let
+Bulbul read it aloud.
 
-Then in the chat: "कल कितने payments fail हुए और क्यों?" The copilot calls
-its typed tools over the live ledger, answers in Hinglish with exact
-numbers, and shows which tools it used in the transparency chips.
+Then the voice moment: tap the mic and ask out loud, in Hindi or
+Hinglish, "कल कितने payments fail हुए और क्यों?" Saaras v4 hears it
+(keyterm-biased for payments vocabulary), the transcript appears tagged
+"heard", and the copilot calls its typed tools over the live ledger,
+answers with exact numbers, and shows which tools it used in the
+transparency chips. Without a Sarvam key, type the same question and say
+the voice rail goes live with the key.
 
 ## 11:30 The control plane
 
@@ -118,8 +123,10 @@ the same paths run on Cashfree sandbox.
 is the merchant's own books: evidence packs, recon, and recovery in one
 pane of glass.
 
-"What's the Sarvam story?" 105B runs the copilot with tool calling over
-the merchant's own ledger, Hinglish native. Sarvam Vision advanced mode
-extracts the bank statement and cross-checks that line items sum to the
-total. Bulbul voices the briefing. The whole demo costs about ₹30 of the
-₹100 signup credits, and nothing throttles at pay-as-you-go rate limits.
+"What's the Sarvam story?" All four modes. Saaras v4 hears the merchant's
+spoken question with keyterm prompting for payments vocabulary. 105B runs
+the copilot with tool calling over the merchant's own ledger, Hinglish
+native. Sarvam Vision advanced mode extracts the bank statement and
+cross-checks that line items sum to the total. Bulbul voices the
+briefing in Hindi. The whole demo costs about ₹30 of the ₹100 signup
+credits, and nothing throttles at pay-as-you-go rate limits.

@@ -291,6 +291,53 @@ export async function extractBankStatement(
   }
 }
 
+/* ── STT: Saaras v4 (the "hears Hindi" front door) ─────────────────────── */
+
+/** Domain vocabulary that biases recognition (saaras:v4 keyterm prompting). */
+const STT_KEYTERMS = [
+  "Klear", "Cashfree", "Sarvam", "UPI", "settlement", "rupee", "payment",
+  "payments", "refund", "reconciliation", "failed", "ledger",
+];
+
+export async function transcribeSpeech(
+  fileName: string,
+  fileBytes: Buffer
+): Promise<string> {
+  const fs = await import("node:fs");
+  const os = await import("node:os");
+  const pathMod = await import("node:path");
+
+  const tmpPath = pathMod.join(os.tmpdir(), `klear-voice-${Date.now()}-${fileName}`);
+  fs.writeFileSync(tmpPath, fileBytes);
+
+  const c = getClient() as unknown as {
+    speechToText: {
+      transcribe: (args: Record<string, unknown>) => Promise<{
+        transcript: string;
+        language_code?: string;
+      }>;
+    };
+  };
+
+  try {
+    const base = {
+      file: fs.createReadStream(tmpPath),
+      model: "saaras:v4",
+      mode: "transcribe", // original language, Hinglish included
+    };
+    // keyterms is v4-only; if the installed SDK rejects it, degrade cleanly
+    let res;
+    try {
+      res = await withRetry(() => c.speechToText.transcribe({ ...base, keyterms: STT_KEYTERMS }));
+    } catch {
+      res = await withRetry(() => c.speechToText.transcribe(base));
+    }
+    return res.transcript ?? "";
+  } finally {
+    fs.rmSync(tmpPath, { force: true });
+  }
+}
+
 /* ── TTS: briefing audio ──────────────────────────────────────────────── */
 
 /**
