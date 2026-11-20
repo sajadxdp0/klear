@@ -1,0 +1,30 @@
+{
+  "model": "lightgbm-onnx-v1",
+  "features": [
+    "amount_rupees",
+    "hour_of_day",
+    "txns_last_1h",
+    "txns_last_24h",
+    "is_new_customer",
+    "amount_z",
+    "refund_ratio",
+    "method_risk",
+    "attempts_on_order",
+    "success_ratio",
+    "prior_count"
+  ],
+  "trained_at": "2026-11-20T23:49:28",
+  "golden_rows": 4852,
+  "golden_fraud_rows": 966,
+  "auc_roc": 0.9997,
+  "auc_pr": 0.9989,
+  "precision_at_0.5": 0.9794,
+  "recall_at_0.5": 0.9834,
+  "f1_at_0.5": 0.9814,
+  "confusion_at_0.5": {
+    "tn": 3866,
+    "fp": 20,
+    "fn": 16,
+    "tp": 950
+  }
+}

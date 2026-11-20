@@ -1,0 +1,14 @@
+node_modules/
+.next/
+out/
+.env
+.env.local
+*.tsbuildinfo
+next-env.d.ts
+data/
+.DS_Store
+mlvenv/
+__pycache__/
+# regenerable training corpora (npm run gen:dataset)
+ml/dataset.csv
+ml/golden.csv

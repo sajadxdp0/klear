@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+/* ── Klear brand tokens ─────────────────────────────────────────────── */
+@theme {
+  --color-ink: #101820;
+  --color-paper: #f7f8f5;
+  --color-klear: #0b7a5e;
+  --color-mint: #3ed598;
+  --color-warn: #b45309;
+  --color-block: #c33c3c;
+  --color-mist: #5b6b7a;
+  --color-hairline: #e4e7e0;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Motion: one family of curves (emil-design-eng). Enter = ease-out,
+     on-screen movement = ease-in-out, press feedback fast+snappy. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+/* ── Base ────────────────────────────────────────────────────────────── */
+html {
+  font-feature-settings: "cv11", "ss01";
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Money, IDs and ledger columns always align. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-mint) 30%, transparent);
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #d6dad2; border-radius: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ── Signature: the clearance stamp ──────────────────────────────────── */
+/* Money "clears" with a stamp: a quick settle-down, like a rubber stamp
+   hitting paper. One-shot, explains a state change, 420ms. */
+@keyframes klear-stamp {
+  0% { transform: scale(1); }
+  35% { transform: scale(0.985); }
+  70% { transform: scale(1.006); }
+  100% { transform: scale(1); }
+}
+.animate-stamp {
+  animation: klear-stamp 420ms var(--ease-out);
+}
+
+/* ── Enter states (rare, occasional events only) ─────────────────────── */
+.toast-enter {
+  opacity: 0;
+  transform: translateY(4px);
+  animation: toast-in 280ms var(--ease-out) forwards;
+}
+@keyframes toast-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.reply-enter {
+  opacity: 0;
+  animation: reply-in 200ms ease-out forwards;
+}
+@keyframes reply-in {
+  to { opacity: 1; }
+}
+
+/* ── Reduced motion: fewer and gentler, not zero ─────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .animate-stamp { animation: none; }
+  .toast-enter {
+    animation: toast-in-opacity 160ms ease forwards;
+  }
+  @keyframes toast-in-opacity {
+    from { opacity: 0; }
+  }
+  .reply-enter { animation: none; }
+  * { transition-duration: 120ms !important; }
+}

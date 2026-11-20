@@ -1,0 +1,102 @@
+{
+  "recon": [
+    {
+      "leg": "ORDER_PAYMENT",
+      "leftRef": "order_KLRx8lq",
+      "expected": "MISSING",
+      "note": "E1: PAID order without SUCCESS payment"
+    },
+    {
+      "leg": "ORDER_PAYMENT",
+      "leftRef": "order_KLRxacb",
+      "expected": "MISMATCH",
+      "note": "E2: payment ₹1 short of order amount"
+    },
+    {
+      "leg": "PAYMENT_SETTLEMENT",
+      "leftRef": "pay_KLRxdym",
+      "expected": "MISSING",
+      "note": "E3: SUCCESS >26h with no settlement"
+    },
+    {
+      "leg": "PAYMENT_SETTLEMENT",
+      "leftRef": "pay_KLRxf1m",
+      "expected": "MISMATCH",
+      "note": "E4: net ≠ gross − fee"
+    },
+    {
+      "leg": "SETTLEMENT_BANK",
+      "leftRef": "set_KLRxjkh",
+      "expected": "MISMATCH",
+      "note": "E5: bank credit ₹5 short"
+    },
+    {
+      "leg": "SETTLEMENT_BANK",
+      "leftRef": "set_KLRxna8",
+      "expected": "MISSING",
+      "note": "E6: settlement missing from bank"
+    },
+    {
+      "leg": "SETTLEMENT_BANK",
+      "leftRef": "set_KLRxr5b",
+      "expected": "DUPLICATE",
+      "note": "E8: same UTR credited twice in statement"
+    },
+    {
+      "leg": "PAYMENT_SETTLEMENT",
+      "leftRef": "pay_KLRxvcg",
+      "expected": "DUPLICATE",
+      "note": "E9: duplicate settlement for one payment"
+    }
+  ],
+  "fraud": [
+    {
+      "paymentId": "pay_KLRytt6",
+      "expectedBand": "BLOCK",
+      "expectedBandNoModel": "BLOCK",
+      "note": "F1: velocity burst ₹9.5K×5"
+    },
+    {
+      "paymentId": "pay_KLRyvwh",
+      "expectedBand": "BLOCK",
+      "expectedBandNoModel": "BLOCK",
+      "note": "F1: velocity burst ₹9.5K×5"
+    },
+    {
+      "paymentId": "pay_KLRyx88",
+      "expectedBand": "BLOCK",
+      "expectedBandNoModel": "BLOCK",
+      "note": "F1: velocity burst ₹9.5K×5"
+    },
+    {
+      "paymentId": "pay_KLRyzgs",
+      "expectedBand": "BLOCK",
+      "expectedBandNoModel": "BLOCK",
+      "note": "F1: velocity burst ₹9.5K×5"
+    },
+    {
+      "paymentId": "pay_KLRz1aw",
+      "expectedBand": "BLOCK",
+      "expectedBandNoModel": "BLOCK",
+      "note": "F1: velocity burst ₹9.5K×5"
+    },
+    {
+      "paymentId": "pay_KLRz48u",
+      "expectedBand": "BLOCK",
+      "expectedBandNoModel": "REVIEW",
+      "note": "F2: new customer high ticket ₹89K card — model escalates, rules floor at REVIEW"
+    },
+    {
+      "paymentId": "pay_KLRzyjl",
+      "expectedBand": "REVIEW",
+      "expectedBandNoModel": "REVIEW",
+      "note": "F3: refund abuser, 4 refunds over 6 txns — human-judgment lane, never model-BLOCK"
+    },
+    {
+      "paymentId": "pay_KLRvtim",
+      "expectedBand": "OK",
+      "expectedBandNoModel": "OK",
+      "note": "F4: loyal whale ₹75K — must NOT flag in any mode"
+    }
+  ]
+}
