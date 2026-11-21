@@ -1,13 +1,16 @@
-# Relay build card — Klear Collections Bridge
+# Relay build card — the collections agent
 
 The MCP route is disabled for the buildathon, so the agent is built by
 hand on the Relay canvas. This card is the exact recipe: every click,
 every value, every fallback. Target time: 15 minutes with the Relay desk
 one arm away.
 
-## Your backend (already running)
+The agent on Relay carries no product name. It is just the collections
+agent, built on Cashfree, reading a backend that ranks the book.
 
-- Klear's ranker is live at:
+## The backend it calls (already running)
+
+- The ranker is live at:
 
   ```
   https://these-connections-telephone-expired.trycloudflare.com/api/collections/relay
@@ -17,9 +20,9 @@ one arm away.
   top 10 borrowers, each with name, phone, language, amount, the
   read-aloud reason, the action, and a message draft in the borrower's
   language. Claims to verify are returned separately.
-- Every call lands in Klear's audit trail as `RELAY_AGENT_RUN`, so the
+- Every call lands in the audit trail as `RELAY_AGENT_RUN`, so the
   demo shows the bridge firing on both platforms at once.
-- If the tunnel URL died overnight, restart it with:
+- If the tunnel URL died, restart it with:
 
   ```bash
   nohup /tmp/opencode/cloudflared tunnel --url http://localhost:3000 \
@@ -33,7 +36,7 @@ one arm away.
 1. Log in at merchant.cashfree.com and **switch to test** (yellow banner).
    Left menu → **Relay**.
 2. **Agents → Create Agent** (or Overview → Set up an automation).
-   Name it: **Klear Collections Bridge**.
+   Name it: **Collections agent**. Nothing else in the name.
 3. **Trigger:** pick **Schedule** (daily, 10:00). If Schedule is not
    offered, pick **Inbound webhook**, copy the URL it shows, and trigger
    it with a curl for the demo. Either works; Schedule reads better.
@@ -59,8 +62,8 @@ one arm away.
      reaches nested fields; if not, hardcode the top borrower (Sunita,
      ₹6,800) for the demo and say the plan feeds it.
 7. **Test flow** from the top bar → open **Runs**: the run should show
-   the HTTP step hitting Klear, the Sarvam audio generated, the link
-   created. Klear's audit trail (on the other screen) shows
+   the HTTP step hitting the ranker, the Sarvam audio generated, the
+   link created. The audit trail (on the other screen) shows
    `cashfree-relay-agent → RELAY_AGENT_RUN` at the same timestamp.
 8. Flip **Draft → Active**.
 
@@ -69,13 +72,13 @@ one arm away.
 Open **Runs**, trigger the flow, and while it fires:
 
 - Play the generated call audio: the live call, in Hindi, produced by
-  the Relay agent's own run.
+  the agent's own run.
 - Show the created payment link.
-- Cut to Klear's audit trail: the same run, recorded from our side.
+- Cut to the audit trail: the same run, recorded from the other side.
 
-One sentence while it plays: *"Relay reads the book through our ranker,
-speaks to the borrower in her language, and sends the money link. Klear
-decides, Relay delivers, the money moves inside Cashfree."*
+One sentence while it plays: *"The agent reads the book through the
+ranking backend, speaks to the borrower in her language, and sends the
+money link. Everything downstream runs on Cashfree rails."*
 
 ## If a node type is missing
 
@@ -87,7 +90,7 @@ head-scratching before you call them over.
 ## Minimal fallback agent (if time runs out)
 
 Trigger: Schedule → single HTTP step → nothing else. The run itself
-proves the bridge; the audio and link then come from Klear's own screen.
-Still a live Relay agent, still firing through Klear's brain, and still
-honest: "the canvas calls our ranker, and everything downstream runs on
-Cashfree rails."
+proves the bridge; the audio and link then come from the queue screen.
+Still a live Relay agent, still firing through the ranker, and still
+honest: "the canvas calls the ranking backend, and everything
+downstream runs on Cashfree rails."

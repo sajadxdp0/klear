@@ -87,15 +87,16 @@ away."
 
 ## 7:30 Relay is the rails (60 seconds)
 
-Show the Relay canvas Runs tab (built by hand with the recipe in
-docs/RELAY-BUILD-CARD.md): schedule trigger fires, the HTTP step calls
-Klear's ranker, Sarvam generates the call audio, Cashfree creates the
-payment link. Trigger it live and play the audio while it runs.
+Show the Relay Runs tab (built by hand with the recipe in
+docs/RELAY-BUILD-CARD.md, the agent itself carries no product name):
+schedule trigger fires, the HTTP step calls the ranker, Sarvam
+generates the call audio, Cashfree creates the payment link. Trigger it
+live and play the audio while it runs.
 
-"Relay is the platform: triggers, channels, approvals. The gallery has
-cart recovery and failed payments, nobody has the collections brain, so
-we built it. Klear decides, Relay delivers, the money moves inside
-Cashfree the whole time."
+"The agent runs on Relay: triggers, channels, approvals. The gallery
+has cart recovery and failed payments, nobody has the collections
+brain, so we built it, and it runs right here on Cashfree's own
+platform."
 
 ## 8:30 Close (30 seconds)
 
