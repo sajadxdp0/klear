@@ -1,15 +1,13 @@
 {
-  "borrower": {
-    "name": "Ravi Shankar",
-    "phone": "+919812345606",
-    "language": "hi-IN",
-    "loanNo": "LN-70006",
-    "amountDueRupees": 34000,
-    "daysOverdue": 90,
-    "promisesMade": 6,
-    "promisesKept": 0,
-    "claimsPaid": false,
-    "hardship": false,
-    "noteFromLastCall": "kal pakka, bilkul pakka"
-  }
+  "name": "Ravi Shankar",
+  "phone": "+919812345606",
+  "language": "hi-IN",
+  "loanNo": "LN-70006",
+  "amountDueRupees": 34000,
+  "daysOverdue": 90,
+  "promisesMade": 6,
+  "promisesKept": 0,
+  "claimsPaid": false,
+  "hardship": false,
+  "noteFromLastCall": "kal pakka, bilkul pakka"
 }
