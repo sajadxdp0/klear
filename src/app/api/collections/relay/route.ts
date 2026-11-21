@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { desc } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
-import { borrowers, collectionActions } from "@/lib/db/schema";
+import { auditLog, borrowers, collectionActions } from "@/lib/db/schema";
 import { buildQueue } from "@/lib/collections/rank";
 import { callingWindowOpen } from "@/lib/collections/rank";
 import { draftMessage } from "@/lib/collections/messages";
@@ -17,6 +17,47 @@ export const dynamic = "force-dynamic";
  *
  * The ranker decides. Relay executes. Both inside their own platforms.
  */
+/**
+ * The Relay HTTP node payload: today's branch plan, one entry per
+ * borrower the workflow should reach. A Relay agent with a schedule
+ * trigger can POST nothing and GET this, or GET on a schedule, and
+ * route each entry to its channel (WhatsApp, Bolna call, payment link).
+ *
+ * The ranker decides. Relay executes. Both inside their own platforms.
+ * POST records the agent's run in the audit ledger, so the demo can
+ * show the Relay run landing in Klear's trail.
+ */
+export async function POST(req: Request) {
+  try {
+    let trigger: Record<string, unknown> = {};
+    try {
+      const text = await req.text();
+      trigger = text ? (JSON.parse(text) as Record<string, unknown>) : {};
+    } catch {
+      trigger = { raw: "unparsed" };
+    }
+
+    const db = getDb();
+    db.insert(auditLog)
+      .values({
+        actor: "cashfree-relay-agent",
+        action: "RELAY_AGENT_RUN",
+        entity: "collections",
+        entityId: null,
+        payload: JSON.stringify({
+          trigger: trigger.trigger ?? trigger.type ?? "scheduled",
+          note: "Relay canvas HTTP node called the Klear ranker",
+        }),
+        createdAt: Date.now(),
+      })
+      .run();
+
+    return GET();
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
+
 export async function GET() {
   try {
     const db = getDb();

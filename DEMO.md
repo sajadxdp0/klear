@@ -87,8 +87,10 @@ away."
 
 ## 7:30 Relay is the rails (60 seconds)
 
-Show the Relay canvas or Runs: trigger, HTTP step into Klear's ranker,
-Sarvam voice for the call, Cashfree link for the money.
+Show the Relay canvas Runs tab (built by hand with the recipe in
+docs/RELAY-BUILD-CARD.md): schedule trigger fires, the HTTP step calls
+Klear's ranker, Sarvam generates the call audio, Cashfree creates the
+payment link. Trigger it live and play the audio while it runs.
 
 "Relay is the platform: triggers, channels, approvals. The gallery has
 cart recovery and failed payments, nobody has the collections brain, so
