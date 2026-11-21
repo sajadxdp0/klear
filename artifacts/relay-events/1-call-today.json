@@ -1,0 +1,15 @@
+{
+  "borrower": {
+    "name": "Sunita Devi",
+    "phone": "+919812345604",
+    "language": "hi-IN",
+    "loanNo": "LN-70004",
+    "amountDueRupees": 6800,
+    "daysOverdue": 18,
+    "promisesMade": 2,
+    "promisesKept": 2,
+    "claimsPaid": false,
+    "hardship": false,
+    "noteFromLastCall": "salary 25 ko aayega, fir de dungi"
+  }
+}

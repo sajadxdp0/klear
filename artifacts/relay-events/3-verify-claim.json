@@ -1,0 +1,15 @@
+{
+  "borrower": {
+    "name": "Naseem Ahmed",
+    "phone": "+919812345603",
+    "language": "hi-IN",
+    "loanNo": "LN-70003",
+    "amountDueRupees": 23000,
+    "daysOverdue": 75,
+    "promisesMade": 4,
+    "promisesKept": 0,
+    "claimsPaid": true,
+    "hardship": false,
+    "noteFromLastCall": "branch mein de diya"
+  }
+}

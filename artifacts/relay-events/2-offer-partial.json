@@ -1,0 +1,15 @@
+{
+  "borrower": {
+    "name": "Shanta Bai",
+    "phone": "+919812345605",
+    "language": "hi-IN",
+    "loanNo": "LN-70005",
+    "amountDueRupees": 19000,
+    "daysOverdue": 55,
+    "promisesMade": 1,
+    "promisesKept": 1,
+    "claimsPaid": false,
+    "hardship": true,
+    "noteFromLastCall": "is mahine mushkil hai, thoda-thoda kar dungi"
+  }
+}

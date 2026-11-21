@@ -1,4 +1,4 @@
-# Design note — Klear Collections
+# Design note — the collections agent
 
 The submission asks for key design choices, including what we chose not
 to use. This is that note.
@@ -7,82 +7,93 @@ to use. This is that note.
 
 Problem 2: who will pay first. A collections manager with 4,200 overdue
 accounts and six callers. We built the agent that decides who to reach
-today, reaches them in their language, verifies claims against the
-ledger, and re-plans the moment anything changes.
+today, reaches them in their language, verifies claims before contact,
+and refuses to spend calls where they cannot pay.
+
+## The architecture
+
+The agent runs on Cashfree Relay, built by hand from their nodes: one
+inbound webhook trigger, one router, four branches. There is no
+external brain called at runtime. The intelligence is the branch order
+and the conditions, exactly as the brief wants an agent built: trigger,
+decide, act, inside their platform.
+
+1. **Verify first.** A borrower who claims to have paid is never
+   trusted and never ignored. The branch routes the claim to the
+   manager with the payment reference requested, before any call.
+2. **Offer partial.** Hardship on record gets a partial payment link
+   with a 25 percent minimum and a draft that offers a way forward. No
+   pressure words exist in any template, because this branch exists.
+3. **Call today.** The productive band: overdue 15 to 60 days and a
+   promise history of at least half kept. The branch speaks in the
+   borrower's language through Sarvam, with the recorded-call
+   disclosure inside the script, and sends a Cashfree payment link.
+4. **Otherwise, hold.** Long overdue with promises never kept. The
+   agent refuses to waste a call and tells the manager why.
+
+Claims outrank hardship, hardship outranks the calling band. Order is
+policy.
+
+## The receipts, measured offline
+
+The same conditions were evaluated offline against a held-back outcomes
+file the agent never sees: our top fifteen of a sixty account book
+finds eleven payers, loan-number order finds seven, a 1.6 times lift.
+The salary-hinted borrower ranks second. The serial promiser is
+benched. Two genuine branch payments verify out of the claim
+bucket, one false claim is caught. The eval prints all of it, plus a
+fairness table: the conditions read days overdue, promise history,
+hardship and claims, and the language distribution of the top queue
+tracks the book, because name, language, area, gender and their proxies
+are not inputs at all.
 
 ## Key choices
 
-**A deterministic ranker, not a learned one.** The scorer is plain
-TypeScript with five defensible signals: overdue band, amount at stake,
-promise history, a stated payday, contact recency. A regulator can read
-every line of it, a manager can recompute any borrower's score by hand,
-and it cannot drift or train on its own call history (the brief warns a
-self-trained ranker can talk itself into a corner). We measured the
-alternative we rejected: an ML model would need outcomes we deliberately
-never show the agent.
+**Deterministic conditions, not a learned model.** The router reads
+behaviors. A regulator can audit every condition, a manager can recompute
+any branch by hand, and nothing drifts or trains on its own call
+history.
 
-**Fairness by construction, not tuning.** Name, language, area, phone,
-gender, religion and caste are not down-weighted; they are not inputs.
-The eval prints the language distribution of the top queue against the
-book to show no proxy ranking. The held-back outcomes file proves the
-ranking beats calling in loan-number order, 1.6x on payers found in the
-top fifteen.
+**Fairness by construction.** Name, language, area, phone, gender,
+religion, caste: not down-weighted, not inputs. The fairness table is
+printed, not promised.
 
-**Claims are checked, never trusted.** "Branch mein de diya" is either a
-lifeline or an excuse. Every paid-claim sits in a verify-first bucket
-until the ledger answers. Two genuine branch payments verify and leave
-the queue with thanks. One false claim is refuted, kindly, and a link
-goes out instead.
+**Claims are checked, never trusted.** The brief calls it: already paid
+is either a lifeline or an excuse. The verify branch exists so the
+answer never depends on hope.
 
-**The LLM never ranks and never moves money.** Sarvam-105B drafts the
-outreach copy in the borrower's language (Hindi, Tamil, Kannada,
-English) and narrates briefings around numbers TypeScript computed. The
-ranking, the banding and every payment action are deterministic code
-behind a human approval recorded in an append-only ledger.
+**Kindness is a branch, not a tone.** Partial links with a minimum, kind
+copy in the borrower's language, the calling window respected, the
+recorded-call disclosure inside every script.
 
-**Kindness is a branch, not a tone.** A borrower who says this month is
-hard gets a partial payment link (Cashfree partial links with a 25
-percent minimum) and a defer-to-payday option. No pressure copy exists
-in any template. The calling window guard respects the 8 AM to 7 PM
-norm, and call drafts carry the recorded-conversation disclosure.
-
-**Relay is the rails, Klear is the mind.** The same branch plan is
-served as JSON for a Cashfree Relay workflow through the HTTP node
-(schedule trigger, WhatsApp or Bolna voice per borrower), so the
-execution can run inside Cashfree's own agent platform with Klear
-supplying the decisions. The payments themselves land through Cashfree
-payment links and webhooks in the sandbox.
+**Sarvam where language lives, Cashfree where money lives.** Sarvam
+speaks the call. Cashfree carries the link and the payment. No other
+platform is needed at runtime.
 
 ## What we chose not to use, and why
 
-- **No ML ranking model.** Under a one-day build it would be
-  unexplainable to a non-technical reviewer, exactly where the brief
-  demands explainability, and it would overfit the sample book.
-- **No name, language, area, gender or any proxy signal.** The obvious
+- **No learned ranking model.** Unexplainable under audit, overfits a
+  one-day sample, and the brief demands reasons a manager can read.
+- **No protected characteristics or their proxies.** The obvious
   shortcuts are unfair, and the brief says show how you checked.
-- **No self-training on call history.** The ranker never learns from its
-  own outreach, so it cannot talk itself into a corner.
-- **No pressure, threats or shame anywhere in the copy.** The hardship
-  branch offers a way forward; that is the whole point of it.
-- **No training on, or display of, held-back outcomes.** The eval reads
-  them after ranking, not the agent before it. The agent is outcome
-  blind by design.
-- **No reliance on error_description strings.** Failure reasons branch
-  on codes, per Cashfree's own guidance.
-- **The Relay MCP route we left as a documented option, not a
-  dependency.** It needs an owner account and a second client; the HTTP
-  node gets the same integration with less risk on demo day.
+- **No training on call history.** The agent cannot talk itself into a
+  corner because it never learns from its own outreach.
+- **No pressure tactics anywhere.** The hardship branch is the answer
+  to a borrower who cannot pay, and it is an offer.
+- **No reliance on error description strings.** Cashfree's own docs
+  call them display-only. Conditions branch on codes.
+- **No MCP or external model calls at runtime.** The event data and
+  the router carry the decisions. Everything that runs, runs on Relay.
 
 ## One success case and one failure case
 
-Success: Sunita, overdue 18 days, kept both past promises, told us her
-salary lands within the week. The ranker put her at number 2, the
-manager approved a link, she paid, and the queue re-formed on screen
-with a new number 1 rising with his reason attached.
+Success: Sunita, overdue 18 days, both past promises kept. The router
+puts her in the calling band, the run generates her Hindi call with the
+disclosure and creates her payment link live in front of the judges.
 
 Failure handled well: Shanta Bai cannot pay in full this month. The
-agent refused to push harder and offered the partial-payment branch
-instead, with a defer option, recorded in the audit ledger. The second
-failure case we show: a borrower who claimed to have paid at the branch
-and had not. The ledger refuted the claim and the agent stayed kind
-about it.
+agent refuses to push harder and takes the partial branch instead: a
+Cashfree partial link at a 25 percent minimum and a draft that offers a
+way forward. The second failure case: Naseem claims he paid at the
+branch with four promises never kept. The agent spends no call, asks
+for the reference, and says why.
