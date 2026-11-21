@@ -1,141 +1,150 @@
-# Klear 13-minute demo run-of-show
+# Klear Collections, 13-minute demo (Problem 2)
 
-Warm-up before judges arrive: `npm run demo:reset && npm run dev`
-Dashboard open at http://localhost:3000. Terminal number two ready with
-`npm run eval`.
+Warm-up before judges arrive:
 
-## 0:00 The one-liner and hero
+```bash
+cd /home/sajadxdp/klear
+npm run db:init && npm run db:seed && npm run db:seed-collections
+npm run eval && npm run eval:collections     # both green, 16/16 + 1.6x lift
+npm run dev
+```
 
-"Klear is the AI back office for a merchant on Cashfree. It reconciles
-every rupee three ways, order, settlement, bank. It recovers failed
-payments, and it flags fraud with reasons you can read. Nothing moves
-money without a human yes."
+Open `http://localhost:3000/collections`. Terminal two shows the eval
+output. If the Cashfree Relay MCP is connected, also open the Relay
+workflow screenshot.
 
-Point at the hero. Klear score 92.5 percent. ₹2.15L collected, ₹1.99L
-cleared, ₹16K at risk, ₹13K recoverable.
+## 0:00 The scene, over the queue
 
-## 1:30 Exceptions that don't close
+"Meena runs collections at a regional lender. 4,200 overdue accounts,
+six callers, eleven days to month-end. Her list is sorted by loan
+number, so her callers will call in order, spending most of today on
+people who will never pay. The list cannot tell them apart."
 
-Walk two or three planted exceptions. They're real failure modes.
+"Klear can. And it can explain every choice it makes."
 
-"Order marked PAID, no SUCCESS payment. ₹2,345 unaccounted."
-"Settlement arithmetic broken. Net doesn't equal gross minus fee.
-Gateway support ticket."
-"Same UTR credited twice in the bank statement."
+Point at the top lane: rank one, rank two, reasons attached.
 
-Then the line about exact-paise matching: "No tolerance on money, ever.
-Fuzziness only in time windows, and always labeled with lower
-confidence."
+## 1:00 Why the top rows are the top rows
 
-## 3:30 Fraud with evidence
+Read rank two's reason aloud: "Kept 2 of 2 past promises. Salary
+expected within the week. Ask right after it lands."
 
-Velocity burst: "Five attempts by one customer inside an hour. Klear
-flags the whole cluster, not just the last attempt." Loyal whale:
-"₹75K from a regular. One mild signal, band stays OK. We measure false
-positives, not just catches."
+"One signal a regulator can read, one behavior a manager can verify,
+one scheduling fact the borrower herself told us. Five signals total,
+and here is the list we refuse to touch."
 
-Build the evidence pack on the burst flag. Cashfree SecureID trio: PAN
-registered name, name-match score of 0.53 poor partial match, bank
-penny drop with FRAUD_ACCOUNT. "Every flag is a dossier, not a black
-box. In simulation today. The same button runs the real SecureID APIs
-with verification keys, same code path."
+Gesture at the footer: no name, no language, no area, no gender, not
+down-weighted, not inputs at all. "The eval prints the fairness check
+and we will show it at the end."
 
-Then the payoff: run `npm run eval` in the terminal. 16/16 green, eight
-recon truths, eight fraud bands, and hold-out model metrics, AUC 0.9997,
-F1 0.981. "We run this before every demo. Accuracy is the product."
+## 2:00 The claims bucket
 
-## 4:30 Disputes, the response drafts itself
+"The book says three people claim they already paid at the branch.
+The claim is either a lifeline or an excuse, and we don't guess which."
 
-Point at the open chargeback on the burst order. "The fraud flag we
-just saw became a real dispute." Click Draft response: a factual
-summary plus evidence points, written around the recorded facts, with
-the status moving to Under review in the ledger. "Chargeflow automates
-this for US card networks. India needs the same lane, UPI-first, and
-the evidence is already in our flag."
+Click Verify against ledger on the first one: payment found, removed
+from the queue with thanks, no wasted call.
 
-## 5:00 Recovery, agent proposes and human decides
+Click the second: "No payment found. The claim does not hold. A kind
+link goes out instead." Same button, both truths, zero trust wasted.
 
-Pick a failed payment with a bank timeout. Read the agent's rationale
-aloud: "Bank timeout is transient. Same-method retry has high recovery
-odds." Approve. Then approve and send link. The Cashfree payment link
-appears with a SIMULATION badge until live keys.
+## 3:00 The approval moment
 
-## 6:00 The customer pays
+Approve the payment link for the salary borrower. The Hindi message
+draft appears. Read the translation: a reminder, a link, an offer of
+help, no threat anywhere. The link is a Cashfree payment link, partial
+payments available for the hardship branch.
 
-Open the link in a second tab, the simulated checkout. Pay via UPI.
-Back on the dashboard: refresh, the payment lands, recoverable drops,
-the audit trail records who approved and when. "With live keys this
-moment arrives via a verified webhook instead. Same code path."
+"With live keys this is a real sandbox link and the payment lands
+through a verified webhook. Same code path either way."
 
-## 7:30 Bank statement drop (Sarvam Vision)
+## 4:00 The moment the brief asked for
 
-Upload artifacts/demo-bank-statement.pdf. With a Sarvam key, Sarvam
-Vision extracts the transactions and the ingest is idempotent: "63
-parsed, 0 new. Money is never double-counted." Without the key, the CSV
-path proves the same matcher. Recon re-runs instantly.
+Open the payment link in a second tab, the simulated customer checkout.
+Pay via UPI.
 
-## 9:00 Ask Klear (Sarvam-105B)
+Back on the queue: refresh. Her row is gone, stamped into the resolved
+lane. A new rank one has risen, with his reason attached.
 
-Click Morning briefing. The narrative is written by Sarvam-105B strictly
-around Klear's own computed numbers. Then click Listen in Hindi and let
-Bulbul read it aloud.
+"A payment landed, the queue re-formed, and the agent can say why. That
+is the product."
 
-Then the voice moment: tap the mic and ask out loud, in Hindi or
-Hinglish, "कल कितने payments fail हुए और क्यों?" Saaras v4 hears it
-(keyterm-biased for payments vocabulary), the transcript appears tagged
-"heard", and the copilot calls its typed tools over the live ledger,
-answers with exact numbers, and shows which tools it used in the
-transparency chips. Without a Sarvam key, type the same question and say
-the voice rail goes live with the key.
+## 5:30 The kindness branch
 
-## 11:30 The control plane
+Point at the hardship case: "this month is hard." Click Offer partial
+payment. A Cashfree partial link with a 25 percent minimum, a draft that
+offers a way forward instead of a harder push. Then the defer option,
+payday-scheduled, no contact until then.
 
-Scroll the audit ledger: every action, actor, timestamp. Agents, humans,
-webhooks. "Approvals are documented and exportable. The copilot can
-approve with your name. It cannot move money by itself."
+"A borrower who cannot pay is offered a way forward. That is a red
+line in the brief and a lane in our product."
 
-## 12:15 Close
+And the honest refusal: the serial promiser, six promises, zero
+payments, held out of today's calling set. "The queue refuses to waste
+calls on him, and it says so."
 
-"Relay is the front line. Carts, calls, COD. Klear is the back office.
-The matching brain, the risk brain, the audit trail. Together, every
-rupee, cleared."
+## 7:00 The multilingual front door
+
+Message drafts render per borrower: Hindi, Tamil, Kannada, English.
+The calling window chip shows IST time and the 8 AM to 7 PM norm.
+Every call draft carries the recorded-conversation disclosure.
+
+## 8:00 The eval, our receipts
+
+Terminal two:
+
+```bash
+npm run eval:collections
+```
+
+"Our ranker finds 11 payers in the top fifteen. Loan-number order finds
+7. A 1.6 times lift, measured against held-back outcomes the agent never
+sees. Planted traps: two genuine branch payments verified, one false
+claim caught, the salary borrower scheduled, the hardship case offered
+a partial, the serial promiser benched. All green."
+
+"And the fairness table: language distribution in the top queue tracks
+the book. No proxy ranking. That is the check the brief demands."
+
+## 10:00 Relay, the rails
+
+Show the Relay endpoint payload or the workflow screenshot: the same
+branch plan as JSON, ready for the HTTP node inside a Relay workflow.
+Schedule trigger, WhatsApp or a Bolna call per borrower, payments
+through Cashfree links.
+
+"Relay is Cashfree's agent platform: triggers, channels, approvals. The
+EMI Collections agent template calls in whatever order it is given.
+Klear is the order it is missing. Relay is the body, Klear is the mind,
+and the money moves inside Cashfree the whole time."
+
+## 12:00 Close
+
+"Six callers can reach sixty people today. The list would spend them on
+loan number LN-10001 onward. Klear spends them where the rupees and the
+reasons are. Every borrower reached in their own language, every claim
+checked against the ledger, every decision one a manager can read
+aloud, and nothing moves without a human yes."
 
 ## Q&A armor
 
-"How accurate?" The eval harness output is on screen. Run it live again.
+"How do you know the ranking is good before anyone pays?" The eval:
+held-back outcomes, lift 1.6x, printed live.
 
-"What if the model is wrong?" Rules floor, human approvals, audit. The
-model only adjusts confidence, it never acts alone.
+"Could it be ranking on language or community?" No. Those fields are
+not inputs to the scorer, and the fairness table is printed as proof.
 
-"What do you know about Cashfree's actual settlement model?" We built
-against the v6 nested recon schema, POST /pg/settlement/recon with
-cursor pagination, event_details sale_type credit and debit, the fee
-formula amount_settled equals payment_amount minus service_charge minus
-service_tax minus settlement_charge minus settlement_tax plus
-adjustment, 18 percent GST on fees, TDS 194-O handled off-cycle, and the
-webhook retry ladder of three retries at 2, 10 and 30 minutes with
-x-idempotency-key dedupe. API is source of truth, webhook is the
-real-time trigger. Both are wired.
+"What if a promise is a lie?" Promise history is tracked: kept versus
+made. Six promises, zero kept, the queue benches you.
 
-"Are your webhooks real?" HMAC-SHA256 over raw body plus timestamp keyed
-with the client secret. Event names are the actual contract:
-PAYMENT_SUCCESS_WEBHOOK, SETTLEMENT_SUCCESS and the rest. UTRs coerced
-from JSON numbers. A ten-minute replay window we enforce ourselves.
+"What about someone who cannot pay?" Partial links with a minimum,
+defer to payday, no pressure copy exists anywhere in the product.
 
-"Production readiness?" Exact integer money internally with rupees and
-paise converted only at the API boundary. Idempotent ingest. Append-only
-ledger. Per-product credential separation, PG versus SecureID, the
-401-looking bug their docs warn about. Swap simulation for live keys and
-the same paths run on Cashfree sandbox.
+"Does the LLM decide anything?" It drafts language, it never ranks, it
+never moves money, and it never sees held-back outcomes. The scoring is
+plain code a manager could recompute by hand.
 
-"Why not Cashfree RiskShield alone?" RiskShield guards the rail. Klear
-is the merchant's own books: evidence packs, recon, and recovery in one
-pane of glass.
-
-"What's the Sarvam story?" All four modes. Saaras v4 hears the merchant's
-spoken question with keyterm prompting for payments vocabulary. 105B runs
-the copilot with tool calling over the merchant's own ledger, Hinglish
-native. Sarvam Vision advanced mode extracts the bank statement and
-cross-checks that line items sum to the total. Bulbul voices the
-briefing in Hindi. The whole demo costs about ₹30 of the ₹100 signup
-credits, and nothing throttles at pay-as-you-go rate limits.
+"What happens when Cashfree drops a fresh file on you?" The loader maps
+columns leniently, the five signals generalize because they are
+behaviors, not keywords, and the eval reruns against whatever outcomes
+the file holds.

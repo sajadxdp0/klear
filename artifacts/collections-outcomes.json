@@ -1,0 +1,305 @@
+{
+  "generatedAt": 1795244343058,
+  "outcomes": [
+    {
+      "borrowerId": "bor_CL17o",
+      "willPayIfAsked": 0,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL2rg",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL31g",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL4an",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL5a9",
+      "willPayIfAsked": 0,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL61z",
+      "willPayIfAsked": 0,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL7db",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL8ij",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL9nd",
+      "willPayIfAsked": 0,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CLa5h",
+      "willPayIfAsked": 0,
+      "wouldPartial": 1
+    },
+    {
+      "borrowerId": "bor_CLbkr",
+      "willPayIfAsked": 0,
+      "wouldPartial": 1
+    },
+    {
+      "borrowerId": "bor_CLc0g",
+      "willPayIfAsked": 0,
+      "wouldPartial": 1
+    },
+    {
+      "borrowerId": "bor_CLdp1",
+      "willPayIfAsked": 0,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CLe42",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CLfl2",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CLgs2",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CLhmq",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CLi1f",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CLj9a",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CLks4",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CLlmg",
+      "willPayIfAsked": 1,
+      "wouldPartial": 1
+    },
+    {
+      "borrowerId": "bor_CLmrw",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CLncv",
+      "willPayIfAsked": 1,
+      "wouldPartial": 1
+    },
+    {
+      "borrowerId": "bor_CLo6c",
+      "willPayIfAsked": 0,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CLpzv",
+      "willPayIfAsked": 1,
+      "wouldPartial": 1
+    },
+    {
+      "borrowerId": "bor_CLqra",
+      "willPayIfAsked": 0,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CLrct",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CLskg",
+      "willPayIfAsked": 0,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CLtuv",
+      "willPayIfAsked": 0,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CLufg",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CLvfg",
+      "willPayIfAsked": 0,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CLwh4",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CLxn5",
+      "willPayIfAsked": 0,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CLyip",
+      "willPayIfAsked": 0,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CLzf6",
+      "willPayIfAsked": 0,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL10hc",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL11b9",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL125u",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL13yr",
+      "willPayIfAsked": 0,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL147n",
+      "willPayIfAsked": 0,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL15f0",
+      "willPayIfAsked": 0,
+      "wouldPartial": 1
+    },
+    {
+      "borrowerId": "bor_CL16pr",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL17ry",
+      "willPayIfAsked": 0,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL18wj",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL1987",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL1avd",
+      "willPayIfAsked": 0,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL1bph",
+      "willPayIfAsked": 0,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL1ccy",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL1dfq",
+      "willPayIfAsked": 0,
+      "wouldPartial": 1
+    },
+    {
+      "borrowerId": "bor_CL1eb1",
+      "willPayIfAsked": 0,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL1f82",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL1g0v",
+      "willPayIfAsked": 0,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL1hns",
+      "willPayIfAsked": 0,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_CL1iof",
+      "willPayIfAsked": 0,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_paid_branch_true",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_paid_branch_true2",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_paid_claim_false",
+      "willPayIfAsked": 0,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_salary_soon",
+      "willPayIfAsked": 1,
+      "wouldPartial": 0
+    },
+    {
+      "borrowerId": "bor_hardship",
+      "willPayIfAsked": 0,
+      "wouldPartial": 1
+    },
+    {
+      "borrowerId": "bor_serial_promiser",
+      "willPayIfAsked": 0,
+      "wouldPartial": 0
+    }
+  ]
+}

@@ -121,6 +121,34 @@ const DDL = [
     closed_in_favor_of TEXT,
     raw TEXT
   )`,
+  `CREATE TABLE IF NOT EXISTS borrowers (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    language TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    loan_no TEXT NOT NULL,
+    amount_due INTEGER NOT NULL,
+    days_overdue INTEGER NOT NULL,
+    promises_made INTEGER NOT NULL DEFAULT 0,
+    promises_kept INTEGER NOT NULL DEFAULT 0,
+    last_contacted_at INTEGER,
+    note TEXT,
+    payday_hint INTEGER,
+    claims_paid INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'IN_QUEUE',
+    created_at INTEGER NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS collection_actions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    borrower_id TEXT NOT NULL,
+    action_type TEXT NOT NULL,
+    rationale TEXT NOT NULL,
+    status TEXT NOT NULL,
+    proposed_by TEXT NOT NULL DEFAULT 'klear-agent',
+    approved_by TEXT,
+    result TEXT,
+    created_at INTEGER NOT NULL
+  )`,
   `CREATE TABLE IF NOT EXISTS klear_runs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     kind TEXT NOT NULL,

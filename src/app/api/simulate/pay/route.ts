@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getDb } from "@/lib/db/client";
-import { orders, payments, recoveryActions } from "@/lib/db/schema";
+import { borrowers, orders, payments, recoveryActions } from "@/lib/db/schema";
 import { desc, eq } from "drizzle-orm";
 import { markRecovered } from "@/lib/recovery/execute";
 import { runRecon } from "@/lib/recon/run";
@@ -20,6 +20,27 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   try {
     const linkId = new URL(req.url).searchParams.get("linkId") ?? "";
+
+    // collections links: preview from the borrower record
+    if (linkId.startsWith("klear-collect-")) {
+      const withoutPrefix = linkId.replace(/^klear-collect-/, "");
+      const tsDash = withoutPrefix.lastIndexOf("-");
+      const borrowerId = tsDash > 0 ? withoutPrefix.slice(0, tsDash) : withoutPrefix;
+      const db = getDb();
+      const bRows = await db.select().from(borrowers).where(eq(borrowers.id, borrowerId)).limit(1);
+      if (bRows.length === 0) {
+        return NextResponse.json({ error: "borrower not found" }, { status: 404 });
+      }
+      const b = bRows[0];
+      return NextResponse.json({
+        orderId: `collect_${b.loanNo}`,
+        amountPaise: b.amountDue,
+        customerName: b.name,
+        status: "DUE",
+        merchantName: process.env.MERCHANT_NAME ?? "Sunrise Organics",
+      });
+    }
+
     const withoutPrefix = linkId.replace(/^klear-recover-/, "");
     const tsDash = withoutPrefix.lastIndexOf("-");
     const orderId = tsDash > 0 ? withoutPrefix.slice(0, tsDash) : withoutPrefix;
@@ -43,6 +64,25 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const { linkId } = z.object({ linkId: z.string().min(3) }).parse(await req.json());
+
+    // dispatch: recovery links (merchant back office) vs collection links
+    // (lender collections) share one simulated customer checkout
+    if (linkId.startsWith("klear-collect-")) {
+      const { recordCollectionPayment } = await import("@/lib/collections/actions");
+      const res = await recordCollectionPayment(linkId);
+      const db = getDb();
+      const bRows = await db.select().from(orders).where(eq(orders.id, `order_collect_${res.borrowerId}`)).all();
+      void bRows;
+      return NextResponse.json({
+        paid: true,
+        mode: "collections",
+        borrowerId: res.borrowerId,
+        partial: res.partial,
+        note: res.partial
+          ? "Partial payment recorded. The queue re-forms with the remaining amount."
+          : "Payment recorded. The queue re-forms without this borrower.",
+      });
+    }
 
     // linkId format: klear-recover-<orderId>-<timestamp>
     const withoutPrefix = linkId.replace(/^klear-recover-/, "");

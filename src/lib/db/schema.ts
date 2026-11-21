@@ -132,6 +132,36 @@ export const disputes = sqliteTable("disputes", {
   raw: text("raw"),
 });
 
+export const borrowers = sqliteTable("borrowers", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  language: text("language").notNull(), // hi-IN | ta-IN | kn-IN | en-IN
+  phone: text("phone").notNull(),
+  loanNo: text("loan_no").notNull(),
+  amountDue: integer("amount_due").notNull(), // paise
+  daysOverdue: integer("days_overdue").notNull(),
+  promisesMade: integer("promises_made").notNull().default(0),
+  promisesKept: integer("promises_kept").notNull().default(0),
+  lastContactedAt: integer("last_contacted_at"),
+  note: text("note"), // code-mixed field note from the last call
+  paydayHint: integer("payday_hint"), // "salary 5th ko aayega" → 5
+  claimsPaid: integer("claims_paid").notNull().default(0), // "branch mein de diya"
+  status: text("status").notNull().default("IN_QUEUE"), // IN_QUEUE | LINK_SENT | PAID | PARTIAL | DEFERRED | VERIFIED_PAID
+  createdAt: integer("created_at").notNull(),
+});
+
+export const collectionActions = sqliteTable("collection_actions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  borrowerId: text("borrower_id").notNull(),
+  actionType: text("action_type").notNull(), // PAYMENT_LINK | PARTIAL_LINK | DEFER | VERIFY_PAID | MARK_LAPSED
+  rationale: text("rationale").notNull(), // readable aloud to a manager
+  status: text("status").notNull(), // PROPOSED | APPROVED | EXECUTED | REJECTED
+  proposedBy: text("proposed_by").notNull().default("klear-agent"),
+  approvedBy: text("approved_by"),
+  result: text("result"), // json: linkUrl, simulated, verified etc
+  createdAt: integer("created_at").notNull(),
+});
+
 export const klearRuns = sqliteTable("klear_runs", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   kind: text("kind").notNull(), // RECON | FRAUD | EVAL

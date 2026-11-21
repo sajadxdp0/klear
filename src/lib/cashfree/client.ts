@@ -83,6 +83,8 @@ export interface CreateLinkInput {
   customerEmail?: string | null;
   purpose: string;
   autoReminders?: boolean;
+  /** Allow installments with a minimum first amount (Cashfree partial links). */
+  partial?: { minimumPaise: number };
 }
 
 export interface CreateLinkResult {
@@ -122,6 +124,12 @@ export async function createPaymentLink(
       upi_intent: "true",
       payment_methods: "cc,dc,upi,nb",
     },
+    ...(input.partial
+      ? {
+          link_partial_payments: true,
+          link_minimum_partial_amount: input.partial.minimumPaise / 100,
+        }
+      : {}),
     link_notes: { source: "klear-recovery" },
   };
 
